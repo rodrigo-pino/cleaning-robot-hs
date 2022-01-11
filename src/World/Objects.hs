@@ -2,7 +2,7 @@
 
 module World.Objects where
 
-import Data.List (nub)
+import Data.List (nub, sort)
 import Data.Maybe
 
 data Position = Position {row :: Int, col :: Int}
@@ -44,6 +44,12 @@ class Movable a where
 
 instance Movable Object where
   update obj pos = Object {typex = typex obj, position = pos}
+
+instance Eq Board where
+  b1 == b2 =
+    maxRows b1 == maxRows b2
+      && maxCols b1 == maxCols b2
+      && (sort (elems b1) == sort (elems b2))
 
 class IBoard a where
   (*++) :: a -> [Object] -> a

@@ -66,4 +66,19 @@ kidTest = describe "Kid movement" $ do
   where
     board = newBoard 5 6
 
+robotWithoutKidTest :: SpecWith ()
+robotWithoutKidTest = describe "Robot without kid movement" $ do
+  it "Respects board boundries when moving" $
+    let robot = make (Robot Nothing) (2, 2)
+        dirtCells = makeMany Dirt [(2, 1), (1, 2), (2, 2), (3, 2), (2, 3)]
+     in moves robot (board *++ (robot : dirtCells))
+          `shouldBe` [ Move (pos (2, 1)),
+                       Move (pos (1, 2)),
+                       Move (pos (2, 3)),
+                       Move (pos (3, 2)),
+                       Clean (pos (2, 2))
+                     ]
+  where
+    board = newBoard 5 6
+
 pos = positionFromTuple

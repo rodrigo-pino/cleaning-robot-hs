@@ -1,9 +1,9 @@
+{-# OPTIONS_GHC -Wno-missing-methods #-}
+
 module World.Objects where
 
 import Data.List (nub)
 import Data.Maybe
-import qualified Data.Maybe
-import Prelude hiding ((!!))
 
 data Position = Position {row :: Int, col :: Int}
 
@@ -13,16 +13,19 @@ data ObjectType
   | Kid
   | Obstacle
   | Robot {carry :: Maybe ObjectType}
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Show)
 
 data Object = Object {typex :: ObjectType, position :: Position}
 
 data Board = Board {elems :: [Object], maxRows :: Int, maxCols :: Int}
 
-data Action a = Clean a | Drop a | Grab a | Move a | Push a a
+data Action a = Clean a | Drop a | Grab a | Move a | Push a a deriving (Eq, Show)
 
 instance Num Position where
   (Position x1 y1) + (Position x2 y2) = Position (x1 + x2) (y1 + y2)
+
+instance Show Position where
+  show (Position rowx coly) = "(" ++ show rowx ++ "," ++ show coly ++ ")"
 
 instance Eq Position where
   (Position x1 y1) == (Position x2 y2) = x1 == x2 && y1 == y2
@@ -74,17 +77,28 @@ instance IBoard Board where
           else Nothing
   getRow board i =
     [ fromJust val
-      | j <- [0 .. maxCols board - 1],
+      | j <- [0 .. maxRows board - 1],
         let val = board ! Position i j
     ]
   getCol board j =
     [ fromJust val
-      | i <- [0 .. maxRows board - 1],
+      | i <- [0 .. maxCols board - 1],
         let val = board ! Position i j
     ]
 
+newBoard = Board []
+
+make :: ObjectType -> (Int, Int) -> Object
+make objType pos = Object objType (positionFromTuple pos)
+
+makeMany :: ObjectType -> [(Int, Int)] -> [Object]
+makeMany objType = map (make objType)
+
 positionFromTuple :: (Int, Int) -> Position
 positionFromTuple = uncurry Position
+
+tupleFromPosition :: Position -> (Int, Int)
+tupleFromPosition (Position x y) = (x, y)
 
 directions :: [Position]
 directions = map positionFromTuple [(1, 0), (-1, 0), (0, 1), (0, -1)]

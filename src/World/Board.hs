@@ -7,7 +7,7 @@ moves :: Object -> Board -> [Action Position]
 moves obj board =
   let allMoves = case typex obj of
         Robot (Just Kid) -> map (move obj board) directions2
-        Robot Nothing -> map (move obj board) directions
+        Robot Nothing -> map (move obj board) (directions ++ [Position 0 0])
         Kid -> map (move obj board) directions
         _ -> error "Movement is not defined for this object"
    in catMaybes allMoves
@@ -36,11 +36,11 @@ move (Object Kid pos) board dir
     objTypes = fromJust cell
     cannotMove = not (null [t | t <- objTypes, t == Crib])
 move (Object (Robot carries) pos) board dir
-  | canClean = Just (Clean pos)
-  | canDrop = Just (Drop pos)
+  | canClean = Just (Clean goto)
+  | canDrop = Just (Drop goto)
   | isNothing cell = Nothing
-  | objTypes == [Kid] = Just (Grab pos)
-  | objTypes `elem` [[Crib], [Dirt], []] = Just (Move pos)
+  | objTypes == [Kid] = Just (Grab goto)
+  | objTypes `elem` [[Crib], [Dirt], []] = Just (Move goto)
   | otherwise = Nothing
   where
     goto = pos + dir

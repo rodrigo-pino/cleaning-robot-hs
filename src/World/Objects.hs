@@ -79,7 +79,7 @@ instance IBoard Board where
                 && r >= 0
                 && c >= 0
      in if valid
-          then Just objTypes
+          then Just (sort objTypes)
           else Nothing
   getRow board i =
     [ fromJust val

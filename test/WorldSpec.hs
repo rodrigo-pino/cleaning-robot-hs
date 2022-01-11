@@ -68,7 +68,7 @@ kidTest = describe "Kid movement" $ do
 
 robotWithoutKidTest :: SpecWith ()
 robotWithoutKidTest = describe "Robot without kid movement" $ do
-  it "Can clean or move to dirty cells" $
+  it "Should clean or move to dirty cells" $
     let robot = make (Robot Nothing) (2, 2)
         dirtCells = makeMany Dirt [(2, 1), (1, 2), (2, 2), (3, 2), (2, 3)]
      in moves robot (board *++ (robot : dirtCells))
@@ -78,7 +78,7 @@ robotWithoutKidTest = describe "Robot without kid movement" $ do
                        Move (pos (2, 1)),
                        Clean (pos (2, 2))
                      ]
-  it "Can grab kids or move to cells with cribs" $
+  it "Should grab kids or move to cells with cribs" $
     let robot = make (Robot Nothing) (2, 2)
         kids = makeMany Kid [(2, 1), (1, 2)]
         cribs = makeMany Crib [(3, 2), (2, 3)]
@@ -94,6 +94,10 @@ robotWithoutKidTest = describe "Robot without kid movement" $ do
      in do
           moves robot1 (board *+ robot1) `shouldBe` [Move (pos (1, 0)), Move (pos (0, 1))]
           moves robot2 (board *+ robot2) `shouldBe` [Move (pos (3, 5)), Move (pos (4, 4))]
+  it "Should not be able to move when blocked by obstacles" $
+    let robot = make (Robot Nothing) (0, 0)
+        obstacles = makeMany Obstacle [(0, 1), (1, 0)]
+     in moves robot (board *++ (robot : obstacles)) `shouldBe` []
   where
     board = newBoard 5 6
 

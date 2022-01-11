@@ -48,3 +48,6 @@ tests:
       - -with-rtsopts=-N
     dependencies:
       - cleaning-robot-hs
+      - tasty
+      - tasty-hspec
+      - hspec

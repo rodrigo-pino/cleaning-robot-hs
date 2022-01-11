@@ -77,12 +77,12 @@ instance IBoard Board where
           else Nothing
   getRow board i =
     [ fromJust val
-      | j <- [0 .. maxRows board - 1],
+      | j <- [0 .. maxCols board - 1],
         let val = board ! Position i j
     ]
   getCol board j =
     [ fromJust val
-      | i <- [0 .. maxCols board - 1],
+      | i <- [0 .. maxRows board - 1],
         let val = board ! Position i j
     ]
 

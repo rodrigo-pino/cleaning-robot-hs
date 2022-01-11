@@ -1,2 +1,7 @@
+import Test.Hspec (hspec)
+import WorldSpec
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = do
+  hspec boardPrimitiveTest
+  hspec kidTest

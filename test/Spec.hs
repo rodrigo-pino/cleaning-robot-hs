@@ -5,3 +5,4 @@ main :: IO ()
 main = do
   hspec boardPrimitiveTest
   hspec kidTest
+  hspec robotWithoutKidTest

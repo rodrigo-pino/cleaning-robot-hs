@@ -67,9 +67,9 @@ kidTest = describe "Kid movement" $ do
     board = newBoard 5 6
 
 robotWithoutKidTest :: SpecWith ()
-robotWithoutKidTest = describe "Robot without kid movement" $ do
+robotWithoutKidTest = describe "Robot movement without kid" $ do
   it "Should clean or move to dirty cells" $
-    let robot = make (Robot Nothing) (2, 2)
+    let robot = make rob (2, 2)
         dirtCells = makeMany Dirt [(2, 1), (1, 2), (2, 2), (3, 2), (2, 3)]
      in moves robot (board *++ (robot : dirtCells))
           `shouldBe` [ Move (pos (3, 2)),
@@ -79,7 +79,7 @@ robotWithoutKidTest = describe "Robot without kid movement" $ do
                        Clean (pos (2, 2))
                      ]
   it "Should grab kids or move to cells with cribs" $
-    let robot = make (Robot Nothing) (2, 2)
+    let robot = make rob (2, 2)
         kids = makeMany Kid [(2, 1), (1, 2)]
         cribs = makeMany Crib [(3, 2), (2, 3)]
      in moves robot (board *++ (robot : kids))
@@ -89,8 +89,8 @@ robotWithoutKidTest = describe "Robot without kid movement" $ do
                        Grab (pos (2, 1))
                      ]
   it "Should respect boundries" $
-    let robot1 = make (Robot Nothing) (0, 0)
-        robot2 = make (Robot Nothing) (4, 5)
+    let robot1 = make rob (0, 0)
+        robot2 = make rob (4, 5)
      in do
           moves robot1 (board *+ robot1) `shouldBe` [Move (pos (1, 0)), Move (pos (0, 1))]
           moves robot2 (board *+ robot2) `shouldBe` [Move (pos (3, 5)), Move (pos (4, 4))]
@@ -99,6 +99,33 @@ robotWithoutKidTest = describe "Robot without kid movement" $ do
         obstacles = makeMany Obstacle [(0, 1), (1, 0)]
      in moves robot (board *++ (robot : obstacles)) `shouldBe` []
   where
+    rob = Robot Nothing
     board = newBoard 5 6
+
+robotWithKidTest = describe "Robot movement when carrying a kid" $ do
+  it "Should have greater moving range" $
+    let robot = make rob (4, 4)
+     in moves robot (board *+ robot)
+          `shouldBe` [ Move (pos (5, 4)),
+                       Move (pos (3, 4)),
+                       Move (pos (4, 5)),
+                       Move (pos (4, 3)), -- until here the first directions
+                       Move (pos (6, 4)),
+                       Move (pos (4, 4)),
+                       Move (pos (5, 5)),
+                       Move (pos (5, 3)),
+                       Move (pos (2, 4)),
+                       Move (pos (3, 5)),
+                       Move (pos (3, 3)),
+                       Move (pos (4, 6)),
+                       Move (pos (4, 2))
+                     ]
+  it "Should not be able to move when surrounded by kids" $
+    let robot = make rob (4, 4)
+        kids = makeMany Kid [(3, 4), (5, 4), (4, 3), (4, 5)]
+     in moves robot (board *++ (robot : kids)) `shouldBe` []
+  where
+    board = newBoard 10 10
+    rob = Robot (Just Kid)
 
 pos = positionFromTuple

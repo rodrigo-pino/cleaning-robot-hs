@@ -110,4 +110,11 @@ directions :: [Position]
 directions = map positionFromTuple [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
 directions2 :: [Position]
-directions2 = nub [d1 + d2 | d1 <- directions, d2 <- directions]
+directions2 = directions ++ nub [d1 + d2 | d1 <- directions, d2 <- directions]
+
+value :: Action a -> a
+value (Clean v) = v
+value (Drop v) = v
+value (Grab v) = v
+value (Move v) = v
+value (Push v _) = v

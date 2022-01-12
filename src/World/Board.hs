@@ -1,12 +1,23 @@
 module World.Board where
 
+import Data.List (nub)
 import Data.Maybe (catMaybes, fromJust, isJust, isNothing)
 import World.Objects
 
 moves :: Object -> Board -> [Action Position]
 moves obj board =
   let allMoves = case typex obj of
-        Robot (Just Kid) -> map (move obj board) directions2
+        Robot (Just Kid) ->
+          let fstSteps = map (move obj board) directions
+              dummyBoard = board *- obj
+              sndSteps =
+                nub
+                  ( concat
+                      [ map (move newObj dummyBoard) directions
+                        | newObj <- map (update obj . value) (catMaybes fstSteps)
+                      ]
+                  )
+           in fstSteps ++ sndSteps
         Robot Nothing -> map (move obj board) (directions ++ [Position 0 0])
         Kid -> map (move obj board) directions
         _ -> error "Movement is not defined for this object"
@@ -39,7 +50,7 @@ move (Object (Robot carries) pos) board dir
   | canClean = Just (Clean goto)
   | canDrop = Just (Drop goto)
   | isNothing cell = Nothing
-  | objTypes == [Kid] = Just (Grab goto)
+  | canGrab = Just (Grab goto)
   | objTypes `elem` [[Crib], [Dirt], []] = Just (Move goto)
   | otherwise = Nothing
   where
@@ -52,6 +63,9 @@ move (Object (Robot carries) pos) board dir
     canDrop =
       (dir == Position 0 0)
         && (fromJust (board ! pos) == [Crib, Robot (Just Kid)])
+    canGrab =
+      objTypes == [Kid]
+        && isNothing carries
 
 applyMove :: Object -> Action Position -> Board -> Board
 applyMove obj (Clean pos) board = board *- Object Dirt pos

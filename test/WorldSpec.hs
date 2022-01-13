@@ -124,6 +124,10 @@ robotWithKidTest = describe "Robot movement when carrying a kid" $ do
     let robot = make rob (4, 4)
         kids = makeMany Kid [(3, 4), (5, 4), (4, 3), (4, 5)]
      in moves robot (board *++ (robot : kids)) `shouldBe` []
+  it "Should not be able to move when surrounded by other robots" $
+    let robot = make rob (4, 4)
+        otherRobots = makeMany (Robot Nothing) [(3, 4), (5, 4), (4, 3), (4, 5)]
+     in moves robot (board *++ (robot : otherRobots)) `shouldBe` []
   where
     board = newBoard 10 10
     rob = Robot (Just Kid)

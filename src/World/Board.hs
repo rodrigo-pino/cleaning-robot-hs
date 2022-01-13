@@ -62,7 +62,7 @@ move (Object (Robot carries) pos) board dir
         && (fromJust (board ! pos) == [Dirt, Robot Nothing])
     canDrop =
       (dir == Position 0 0)
-        && (fromJust (board ! pos) == [Crib, Robot (Just Kid)])
+        && (fromJust (board ! pos) `elem` [[Robot (Just Kid)], [Crib, Robot (Just Kid)]])
     canGrab =
       objTypes == [Kid]
         && isNothing carries

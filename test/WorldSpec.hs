@@ -98,6 +98,15 @@ robotWithoutKidTest = describe "Robot movement without kid" $ do
     let robot = make (Robot Nothing) (0, 0)
         obstacles = makeMany Obstacle [(0, 1), (1, 0)]
      in moves robot (board *++ (robot : obstacles)) `shouldBe` []
+  it "Should not be able to grab kids where he stands" $
+    let robot = make rob (2, 2)
+        kid = make Kid (2, 2)
+     in moves robot (board *++ [robot, kid])
+          `shouldBe` [ Move (pos (3, 2)),
+                       Move (pos (1, 2)),
+                       Move (pos (2, 3)),
+                       Move (pos (2, 1))
+                     ]
   where
     rob = Robot Nothing
     board = newBoard 5 6
@@ -110,8 +119,8 @@ robotWithKidTest = describe "Robot movement when carrying a kid" $ do
                        Move (pos (3, 4)),
                        Move (pos (4, 5)),
                        Move (pos (4, 3)), -- until here the first directions
+                       Drop (pos (4, 4)),
                        Move (pos (6, 4)),
-                       Move (pos (4, 4)),
                        Move (pos (5, 5)),
                        Move (pos (5, 3)),
                        Move (pos (2, 4)),
@@ -123,11 +132,11 @@ robotWithKidTest = describe "Robot movement when carrying a kid" $ do
   it "Should not be able to move when surrounded by kids" $
     let robot = make rob (4, 4)
         kids = makeMany Kid [(3, 4), (5, 4), (4, 3), (4, 5)]
-     in moves robot (board *++ (robot : kids)) `shouldBe` []
+     in moves robot (board *++ (robot : kids)) `shouldBe` [Drop (pos (4, 4))]
   it "Should not be able to move when surrounded by other robots" $
     let robot = make rob (4, 4)
         otherRobots = makeMany (Robot Nothing) [(3, 4), (5, 4), (4, 3), (4, 5)]
-     in moves robot (board *++ (robot : otherRobots)) `shouldBe` []
+     in moves robot (board *++ (robot : otherRobots)) `shouldBe` [Drop (pos (4, 4))]
   where
     board = newBoard 10 10
     rob = Robot (Just Kid)

@@ -1,4 +1,4 @@
-module Agent.Logic where
+module Agent.Logic.TaskHandling where
 
 import Agent.Objects
 import Data.List (elemIndex)
@@ -6,15 +6,19 @@ import qualified Data.Matrix as M
 import qualified GHC.Arr as A
 import World.Objects
 
-taskHandler :: [Task] -> [Agent] -> [Agent]
-taskHandler tasks agents = []
+-- Need path finding operational to complete this method!!!
+taskHandler :: [Task] -> [Agent] -> [(Int, Int)]
+taskHandler tasks agents =
+  optimize
+    (getCostMatrix tasks agents)
   where
     costMatrix = getCostMatrix tasks agents
     rawTaskAssignment = optimize costMatrix
+    res = foldl (\acc val -> acc ++ [val]) [] rawTaskAssignment
 
-scanForTasks :: Board -> [AssignedTask] -> [Task]
-scanForTasks board aTasks = []
+-- f acc (i, j) =
 
+-- returns list of tuples (i, j) which means task i will be done by agent j
 optimize :: M.Matrix (Natural, [(Int, Int)]) -> [(Int, Int)]
 optimize costMatrix =
   let minMatrix = dp A.! (m - 1)

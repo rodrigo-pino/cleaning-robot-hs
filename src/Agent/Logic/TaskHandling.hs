@@ -6,6 +6,11 @@ import qualified Data.Matrix as M
 import qualified GHC.Arr as A
 import World.Objects
 
+getTasks :: Board -> [Task]
+getTasks board = [Task {target = obj, solvers = []} | obj <- elems board, typex obj `elem` tasks]
+  where
+    tasks = [Dirt, Crib]
+
 -- Need path finding operational to complete this method!!!
 taskHandler :: [Task] -> [Agent] -> [(Int, Int)]
 taskHandler tasks agents =
@@ -15,8 +20,6 @@ taskHandler tasks agents =
     costMatrix = getCostMatrix tasks agents
     rawTaskAssignment = optimize costMatrix
     res = foldl (\acc val -> acc ++ [val]) [] rawTaskAssignment
-
--- f acc (i, j) =
 
 -- returns list of tuples (i, j) which means task i will be done by agent j
 optimize :: M.Matrix (Natural, [(Int, Int)]) -> [(Int, Int)]

@@ -1,3 +1,4 @@
+import TaskHandlingSpec
 import Test.Hspec (hspec)
 import VisualSpec
 import WorldSpec
@@ -10,5 +11,7 @@ main = do
   hspec robotWithoutKidTest
   hspec robotWithKidTest
   hspec actionApplicationTest
+  -- Task Specs
+  hspec findTaskTest
   -- Visual Tests
   hspec visualTest

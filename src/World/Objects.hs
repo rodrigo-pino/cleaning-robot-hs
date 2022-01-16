@@ -21,6 +21,9 @@ data Board = Board {elems :: [Object], maxRows :: Int, maxCols :: Int}
 
 data Action a = Clean a | Drop a | Grab a | Move a | Push a a deriving (Eq, Show)
 
+instance (Ord a) => Ord (Action a) where
+  a1 <= a2 = value a1 <= value a2
+
 instance Num Position where
   (Position x1 y1) + (Position x2 y2) = Position (x1 + x2) (y1 + y2)
 
@@ -39,6 +42,9 @@ instance Eq Object where
 instance Ord Object where
   obj1 <= obj2 = position obj1 <= position obj2 && typex obj1 <= typex obj2
 
+instance Show Object where
+  show obj = "{" ++ show (typex obj) ++ "," ++ show (position obj) ++ "}"
+
 class Movable a where
   update :: a -> Position -> a
 
@@ -50,6 +56,9 @@ instance Eq Board where
     maxRows b1 == maxRows b2
       && maxCols b1 == maxCols b2
       && (sort (elems b1) == sort (elems b2))
+
+instance Show Board where
+  show b = show (elems b)
 
 class IBoard a where
   (*++) :: a -> [Object] -> a

@@ -69,8 +69,8 @@ move (Object (Robot carries) pos) board dir
         && isNothing carries
 
 applyMove :: Object -> Action Position -> Board -> Board
-applyMove obj (Clean pos) board = board *- Object Dirt pos
-applyMove obj (Drop pos) board = board *+ Object Kid pos
+applyMove _ (Clean pos) board = board *- Object Dirt pos
+applyMove obj (Drop pos) board = (board *- obj) *++ [Object Kid pos, Object (Robot Nothing) pos]
 applyMove obj (Grab pos) board =
   (board *-- [Object Kid pos, obj]) *+ Object (Robot (Just Kid)) pos
 applyMove obj (Move pos) board = (board *- obj) *+ update obj pos

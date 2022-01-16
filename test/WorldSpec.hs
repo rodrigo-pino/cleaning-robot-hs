@@ -141,4 +141,29 @@ robotWithKidTest = describe "Robot movement when carrying a kid" $ do
     board = newBoard 10 10
     rob = Robot (Just Kid)
 
+actionApplicationTest :: SpecWith ()
+actionApplicationTest = describe "Update board when actions are applied" $ do
+  it "Should clean correctly" $
+    let result = applyMove robot (Clean p22) (board *+ make Dirt (2, 2))
+     in elems result `shouldBe` []
+  it "Should grab kid correctly" $
+    let result = applyMove robot (Grab p23) (board *++ [make Kid (2, 3), make (Robot Nothing) (2, 2)])
+     in elems result `shouldBe` [make (Robot (Just Kid)) (2, 3)]
+  it "Should drop kid correctly" $
+    let result = applyMove robotWithKid (Drop p22) (board *+ robotWithKid)
+     in elems result `shouldBe` [make Kid (2, 2), make (Robot Nothing) (2, 2)]
+  it "Should push obstacle correctly" $
+    let obstacles = makeMany Obstacle [(2, 2), (2, 3)]
+        endResult = [make Obstacle (2, 3), make Kid (2, 2), make Obstacle (2, 4)]
+        kid = make Kid (2, 1)
+        result = applyMove kid (Push p22 p24) (board *++ obstacles)
+     in elems result `shouldBe` endResult
+  where
+    board = newBoard 5 5
+    robot = make (Robot Nothing) (2, 2)
+    robotWithKid = make (Robot (Just Kid)) (2, 2)
+    p22 = Position 2 2
+    p23 = Position 2 3
+    p24 = Position 2 4
+
 pos = positionFromTuple

@@ -10,14 +10,13 @@ import World.Objects
 getTasks :: Board -> [Agent] -> [Task]
 getTasks board agents = [tsk | tsk <- tasks, target tsk `notElem` takenTasks]
   where
-    taskTypes = [Dirt, Crib]
     tasks =
       [ Task {target = obj, solvers = []}
         | obj <- elems board,
-          typex obj `elem` taskTypes
+          typex obj `elem` [Dirt, Crib]
       ]
     takenTasks =
-      [ (destinaton . fromJust . task) agt
+      [ (destinaton . fromJust) assignedTask
         | agt <- agents,
           let assignedTask = task agt,
           isJust assignedTask
@@ -76,8 +75,9 @@ minimumCost costMatrix currentIndex = fst (foldl f ((Infinite, (-1, -1)), (0, 0)
       | otherwise = (i, j + 1)
 
 -- Get tasks agents and how they will be split, and returns new tasks
-parseTaskDivision :: [Task] -> [Agent] -> [(Int, Int)] -> ([Task], [Agent])
-parseTaskDivision task agent tasksToDivide = ([], [])
+-- Need pathfinding again to return the agent calculated path
+parseTaskDivision :: [Task] -> [Agent] -> [(Int, Int)] -> [Agent]
+parseTaskDivision tasks agent tasksToDivide = []
 
 getCostMatrix :: [Task] -> [Agent] -> M.Matrix (Natural, [(Int, Int)])
 getCostMatrix tasks agents =

@@ -3,19 +3,28 @@ module Agent.Logic.TaskHandling where
 import Agent.Objects
 import Data.List (elemIndex)
 import qualified Data.Matrix as M
+import Data.Maybe (fromJust, isJust)
 import qualified GHC.Arr as A
 import World.Objects
 
-getTasks :: Board -> [Task]
-getTasks board = [Task {target = obj, solvers = []} | obj <- elems board, typex obj `elem` tasks]
+getTasks :: Board -> [Agent] -> [Task]
+getTasks board agents = [tsk | tsk <- tasks, target tsk `notElem` takenTasks]
   where
-    tasks = [Dirt, Crib]
+    taskTypes = [Dirt, Crib]
+    tasks =
+      [ Task {target = obj, solvers = []}
+        | obj <- elems board,
+          typex obj `elem` taskTypes
+      ]
+    takenTasks =
+      [ (destinaton . fromJust . task) agt
+        | agt <- agents,
+          let assignedTask = task agt,
+          isJust assignedTask
+      ]
 
--- Need path finding operational to complete this method!!!
-taskHandler :: [Task] -> [Agent] -> [(Int, Int)]
-taskHandler tasks agents =
-  optimize
-    (getCostMatrix tasks agents)
+getOptimalTaskDivison :: [Task] -> [Agent] -> [(Int, Int)]
+getOptimalTaskDivison tasks agents = []
   where
     costMatrix = getCostMatrix tasks agents
     rawTaskAssignment = optimize costMatrix
@@ -65,6 +74,10 @@ minimumCost costMatrix currentIndex = fst (foldl f ((Infinite, (-1, -1)), (0, 0)
       | i == n = error "Index out of range while searching for minimum"
       | j == m - 1 = (i + 1, 0)
       | otherwise = (i, j + 1)
+
+-- Get tasks agents and how they will be split, and returns new tasks
+parseTaskDivision :: [Task] -> [Agent] -> [(Int, Int)] -> ([Task], [Agent])
+parseTaskDivision task agent tasksToDivide = ([], [])
 
 getCostMatrix :: [Task] -> [Agent] -> M.Matrix (Natural, [(Int, Int)])
 getCostMatrix tasks agents =

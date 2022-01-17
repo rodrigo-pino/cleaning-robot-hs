@@ -13,7 +13,7 @@ main = do
   hspec robotWithKidTest
   hspec actionApplicationTest
   -- Task Specs
-  hspec findTaskTest
   hspec taskReachabilityTest
+  hspec taskDetecttionTest
   -- Visual Tests
   hspec visualTest

@@ -44,28 +44,42 @@ taskReachabilityTest = describe "Testing agent ability to detect tasks to be don
         reachable = reachableTasks board agent
         expected = [(make Crib (0, 3), Natural 5), (make Dirt (1, 3), Natural 7)]
      in reachable `shouldBe` expected
+  it "Should not reach crib task since it cannot reach kid" $
+    let robot = make (Robot Nothing) (0, 0)
+        agent = Agent robot Nothing
+        crib = make Crib (0, 1)
+        kid = make Kid (0, 3)
+        obstacles = makeMany Obstacle [(0, 2), (1, 2)]
+        board = newBoard 2 4 *++ (robot : crib : kid : obstacles)
+        reachable = reachableTasks board agent
+        expected = []
+     in reachable `shouldBe` expected
   where
     baseBoard = newBoard 5 5
 
 taskDetecttionTest :: SpecWith ()
 taskDetecttionTest = describe "Testing that tasks are updated accordingly when new solvers are found" $ do
-  it "Should detect all cleaning tasks" $
+  it "Agents should detect all cleaning tasks" $
     let robot = make (Robot Nothing) (10, 15)
         agent = Agent robot Nothing
         dirty = makeMany Dirt [(10, 0), (29, 16)]
-        board = baseBoard *+ robot *++ dirty
+        board = newBoard 30 30 *+ robot *++ dirty
         tasks = map (objToTask []) dirty
-        t = reachableTasks board agent
-     in do
-          print t
-          findSolvers board tasks [agent]
-            `shouldBe` [ objToTask [Solver agent (Natural 15)] (make Dirt (10, 0)),
-                         objToTask [Solver agent (Natural 20)] (make Dirt (29, 16))
-                       ]
-  it "Should find only the reachable cleaning tasks" $
-    3 `shouldBe` 3
-  it "Each agent should find only the tasks it has access to" $
-    3 `shouldBe` 3
+     in findSolvers board tasks [agent]
+          `shouldBe` [ objToTask [Solver agent (Natural 16)] (make Dirt (10, 0)),
+                       objToTask [Solver agent (Natural 21)] (make Dirt (29, 16))
+                     ]
+  it "Each agent should detect the crib task" $
+    let robot1 = make (Robot Nothing) (0, 0)
+        robot2 = make (Robot Nothing) (0, 4)
+        agent1 = Agent robot1 Nothing
+        agent2 = Agent robot2 Nothing
+        crib = make Crib (4, 2)
+        kid = make Kid (0, 2)
+        board = newBoard 5 5 *++ [robot1, robot2, crib, kid]
+        tasks = [objToTask [] crib]
+     in findSolvers board tasks [agent1, agent2]
+          `shouldBe` [objToTask [Solver agent1 (Natural 5), Solver agent2 (Natural 5)] crib]
   where
     objToTask slv obj = Task obj slv
     baseBoard = newBoard 5 5

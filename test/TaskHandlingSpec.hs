@@ -1,7 +1,7 @@
 module TaskHandlingSpec where
 
 import Agent.Logic.TaskHandling
-import Agent.Objects (Task (..))
+import Agent.Objects
 import Test.Hspec
 import Test.Tasty
 import Test.Tasty.Hspec
@@ -15,6 +15,10 @@ findTaskTest = describe "Detect all tasks on board" $ do
   it "Should detect a crib task" $
     let crib = make Crib (5, 5)
      in getTasks (board *+ crib) [] `shouldBe` [Task {target = crib, solvers = []}]
+  it "Should not detect already assigned tasks" $
+    let crib = make Crib (5, 5)
+        agentx = Agent (make (Robot Nothing) (0, 0)) (Just (AssignedTask crib []))
+     in getTasks (board *+ crib) [agentx] `shouldBe` []
   where
     board = newBoard 10 10
 

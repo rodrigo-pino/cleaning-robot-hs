@@ -1,9 +1,10 @@
 module Agent.Logic.TaskHandling where
 
+import Agent.Logic.Pathfinding
 import Agent.Objects
 import Data.List (elemIndex)
 import qualified Data.Matrix as M
-import Data.Maybe (fromJust, isJust)
+import Data.Maybe (catMaybes, fromJust, isJust, isNothing, mapMaybe)
 import qualified GHC.Arr as A
 import World.Objects
 
@@ -27,7 +28,7 @@ getOptimalTaskDivison tasks agents = []
   where
     costMatrix = getCostMatrix tasks agents
     rawTaskAssignment = optimize costMatrix
-    res = foldl (\acc val -> acc ++ [val]) [] rawTaskAssignment
+    res = foldl (\acc val -> val : acc) [] rawTaskAssignment
 
 -- returns list of tuples (i, j) which means task i will be done by agent j
 optimize :: M.Matrix (Natural, [(Int, Int)]) -> [(Int, Int)]
@@ -75,9 +76,22 @@ minimumCost costMatrix currentIndex = fst (foldl f ((Infinite, (-1, -1)), (0, 0)
       | otherwise = (i, j + 1)
 
 -- Get tasks agents and how they will be split, and returns new tasks
--- Need pathfinding again to return the agent calculated path
-parseTaskDivision :: [Task] -> [Agent] -> [(Int, Int)] -> [Agent]
-parseTaskDivision tasks agent tasksToDivide = []
+parseTaskDivision :: Board -> [Task] -> [Agent] -> [(Int, Int)] -> [Agent]
+parseTaskDivision board tasks agent = mapMaybe parse
+  where
+    parse (i, j)
+      | isNothing aTask =
+        Just
+          Agent
+            { entity = entity dAgent,
+              task = Just AssignedTask {destinaton = target dTask, actions = path}
+            }
+      | otherwise = Nothing
+      where
+        dTask = tasks !! i
+        dAgent = agent !! j
+        aTask = task dAgent
+        path = pathToTask board dAgent (target dTask)
 
 getCostMatrix :: [Task] -> [Agent] -> M.Matrix (Natural, [(Int, Int)])
 getCostMatrix tasks agents =

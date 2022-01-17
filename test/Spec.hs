@@ -1,3 +1,4 @@
+import PathfindingSpec
 import TaskHandlingSpec
 import Test.Hspec (hspec)
 import VisualSpec
@@ -13,5 +14,6 @@ main = do
   hspec actionApplicationTest
   -- Task Specs
   hspec findTaskTest
+  hspec taskReachabilityTest
   -- Visual Tests
   hspec visualTest

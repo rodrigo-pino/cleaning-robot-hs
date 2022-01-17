@@ -34,6 +34,7 @@ instance Ord Natural where
 
 instance Num Natural where
   (+) n1 n2 = calc (+) n1 n2
+  fromInteger n = Natural (fromIntegral n)
 
 -- fromInteger n = Natural n
 

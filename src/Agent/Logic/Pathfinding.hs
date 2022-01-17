@@ -8,12 +8,22 @@ import Data.Set (Set, insert, member)
 import qualified Data.Set as Set
 import Debug.Trace (trace)
 import World.Board
-import World.Objects (Action (..), Board, Object, ObjectType (..), Position)
+import World.Objects
+  ( Action (..),
+    Board,
+    Object,
+    ObjectType (..),
+    Position,
+    position,
+    typex,
+    value,
+  )
 import qualified World.Objects as WO
 
 type SeqAct = Seq (Object, Action Position, Board, Natural)
 
--- type SetAct = Set (Action Position, ObjectType)
+type SeqActMem = Seq (Object, Action Position, Board, [Action Position])
+
 type SetAct = [(Action Position, ObjectType)]
 
 type ReachedTask = (Object, Natural)
@@ -59,12 +69,34 @@ searchAll ((prevObj, act, board, time) :<| queue) visited
         else searchAll nextQueue newVisited
     _ -> searchAll nextQueue newVisited
   where
-    objType = WO.typex prevObj
+    objType = typex prevObj
     newVisited = (act, objType) : visited
     (nextObj, nextBoard) = localApplyMove board prevObj act
     nextMoves = moves nextObj nextBoard
     nextTime = time + Natural 1
     nextQueue = foldl (\acc val -> acc :|> (nextObj, val, nextBoard, nextTime)) queue nextMoves
+
+pathToTask :: Board -> Agent -> Object -> [Action Position]
+pathToTask board agentx targetx = []
+
+pathfind :: Object -> SeqActMem -> SetAct -> [Action Position]
+pathfind _ Empty _ = []
+pathfind targetx ((prevObj, act, board, path) :<| queue) visited
+  | (act, objType) `elem` visited = pathfind targetx queue visited
+  | actPos == tPos =
+    case act of
+      (Move _) -> pathfind targetx nextQueue newVisited
+      _ -> reverse (act : path)
+  | otherwise = pathfind targetx nextQueue newVisited
+  where
+    tPos = position targetx
+    actPos = value act
+    objType = typex prevObj
+    newVisited = (act, objType) : visited
+    (nextObj, nextBoard) = localApplyMove board prevObj act
+    updatedPath = act : path
+    nextMoves = moves nextObj nextBoard
+    nextQueue = foldl (\acc val -> acc :|> (nextObj, val, nextBoard, updatedPath)) queue nextMoves
 
 localApplyMove :: Board -> Object -> Action Position -> (Object, Board)
 localApplyMove board obj action =
@@ -74,7 +106,7 @@ localApplyMove board obj action =
     (Robot c, Move actPos) -> (make (Robot c) actPos, newBoard)
     _ -> error "Local apply to unexpected action or object"
   where
-    objType = WO.typex obj
+    objType = typex obj
     newBoard = applyMove obj action board
 
 make obj pos = WO.make obj (WO.tupleFromPosition pos)

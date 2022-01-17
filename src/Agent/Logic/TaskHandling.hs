@@ -23,12 +23,12 @@ getTasks board agents = [tsk | tsk <- tasks, target tsk `notElem` takenTasks]
           isJust assignedTask
       ]
 
-getOptimalTaskDivison :: [Task] -> [Agent] -> [(Int, Int)]
-getOptimalTaskDivison tasks agents = []
+getOptimalTaskDivison :: Board -> [Task] -> [Agent] -> [Agent]
+getOptimalTaskDivison board tasks agents =
+  parseTaskDivision board tasks agents rawTaskAssignment
   where
     costMatrix = getCostMatrix tasks agents
     rawTaskAssignment = optimize costMatrix
-    res = foldl (\acc val -> val : acc) [] rawTaskAssignment
 
 -- returns list of tuples (i, j) which means task i will be done by agent j
 optimize :: M.Matrix (Natural, [(Int, Int)]) -> [(Int, Int)]

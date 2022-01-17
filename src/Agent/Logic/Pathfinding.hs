@@ -77,7 +77,10 @@ searchAll ((prevObj, act, board, time) :<| queue) visited
     nextQueue = foldl (\acc val -> acc :|> (nextObj, val, nextBoard, nextTime)) queue nextMoves
 
 pathToTask :: Board -> Agent -> Object -> [Action Position]
-pathToTask board agentx targetx = []
+pathToTask board agentx targetx = pathfind targetx initialQueue []
+  where
+    obj = entity agentx
+    initialQueue = Seq.fromList [(obj, mov, board, []) | mov <- moves obj board]
 
 pathfind :: Object -> SeqActMem -> SetAct -> [Action Position]
 pathfind _ Empty _ = []
@@ -94,9 +97,8 @@ pathfind targetx ((prevObj, act, board, path) :<| queue) visited
     objType = typex prevObj
     newVisited = (act, objType) : visited
     (nextObj, nextBoard) = localApplyMove board prevObj act
-    updatedPath = act : path
     nextMoves = moves nextObj nextBoard
-    nextQueue = foldl (\acc val -> acc :|> (nextObj, val, nextBoard, updatedPath)) queue nextMoves
+    nextQueue = foldl (\acc val -> acc :|> (nextObj, val, nextBoard, act : path)) queue nextMoves
 
 localApplyMove :: Board -> Object -> Action Position -> (Object, Board)
 localApplyMove board obj action =

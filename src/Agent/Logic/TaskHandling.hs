@@ -5,8 +5,14 @@ import Agent.Objects
 import Data.List (elemIndex)
 import qualified Data.Matrix as M
 import Data.Maybe (catMaybes, fromJust, isJust, isNothing, mapMaybe)
+import Debug.Trace (trace)
 import qualified GHC.Arr as A
 import World.Objects
+
+handleTasks :: Board -> [Agent] -> [Agent]
+handleTasks board agents = getOptimalTaskDivison board tasks agents
+  where
+    tasks = findSolvers board (getTasks board agents) agents
 
 getTasks :: Board -> [Agent] -> [Task]
 getTasks board agents = [tsk | tsk <- tasks, target tsk `notElem` takenTasks]
@@ -56,6 +62,7 @@ optimize costMatrix =
       where
         prevMatrix = dp A.! (k - 1)
 
+-- Minimum value and its position, current coordinates
 type Acc = ((Natural, (Int, Int)), (Int, Int))
 
 minimumCost :: M.Matrix (Natural, [(Int, Int)]) -> (Int, Int) -> (Natural, (Int, Int))
@@ -66,7 +73,10 @@ minimumCost costMatrix currentIndex = fst (foldl f ((Infinite, (-1, -1)), (0, 0)
 
     f :: Acc -> (Natural, [(Int, Int)]) -> Acc
     f ((minVal, minInd), ind) (nat, ignore)
-      | nat < minVal && currentIndex `notElem` ind : ignore = ((nat, ind), incIndex ind)
+      | nat < minVal
+          && (currentIndex `hardNotEq` ind)
+          && (currentIndex `notElem` ignore) =
+        ((nat, ind), incIndex ind)
       | otherwise = ((minVal, minInd), incIndex ind)
 
     incIndex :: (Int, Int) -> (Int, Int)
@@ -74,6 +84,8 @@ minimumCost costMatrix currentIndex = fst (foldl f ((Infinite, (-1, -1)), (0, 0)
       | i == n = error "Index out of range while searching for minimum"
       | j == m - 1 = (i + 1, 0)
       | otherwise = (i, j + 1)
+
+    hardNotEq val1 val2 = fst val1 /= fst val2 && snd val1 /= snd val2
 
 -- Get tasks agents and how they will be split, and returns new tasks
 parseTaskDivision :: Board -> [Task] -> [Agent] -> [(Int, Int)] -> [Agent]

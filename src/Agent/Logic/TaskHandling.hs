@@ -41,10 +41,11 @@ optimize :: M.Matrix (Natural, [(Int, Int)]) -> [(Int, Int)]
 optimize costMatrix =
   let minMatrix = dp A.! (m - 1)
       (_, minInd) = minimumCost minMatrix (-1, -1)
-   in snd (minMatrix M.! minInd)
+   in snd (minMatrix M.! valid minInd)
   where
     n = M.nrows costMatrix
     m = M.ncols costMatrix
+    valid (i, j) = (i + 1, j + 1)
 
     dp = A.listArray (0, m) [f k | k <- [0 .. m - 1]]
     f :: Int -> M.Matrix (Natural, [(Int, Int)])
@@ -53,11 +54,12 @@ optimize costMatrix =
       M.fromList
         n
         m
-        [ (mc, (i, j) : tail)
+        [ (costij + mc, (i, j) : tail)
           | i <- [0 .. n - 1],
             j <- [0 .. m - 1],
             let (mc, agent) = minimumCost prevMatrix (i, j),
-            let tail = snd (prevMatrix M.! agent)
+            let costij = fst (costMatrix M.! valid (i, j)),
+            let tail = snd (prevMatrix M.! valid agent)
         ]
       where
         prevMatrix = dp A.! (k - 1)

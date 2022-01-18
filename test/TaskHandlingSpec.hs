@@ -1,7 +1,9 @@
 module TaskHandlingSpec where
 
+import Agent.Logic.Pathfinding hiding (make)
 import Agent.Logic.TaskHandling
 import Agent.Objects
+import Data.Matrix as M
 import Test.Hspec
 import Test.Tasty
 import Test.Tasty.Hspec
@@ -22,6 +24,53 @@ findTaskTest = describe "Detect all tasks on board" $ do
   where
     board = newBoard 10 10
 
-optimizeTest = describe "Optimal distribution of tasks" $ do
-  it "Should assing the agent the fastest to complete task" $
-    3 `shouldBe` 3
+taskToMatrixTest =
+  describe "Transform tasks and agents input into a cost matrix" $ do
+    it "Should produce the correct matrix #1" $
+      let robot = make (Robot Nothing) (0, 0)
+          kid = make Kid (1, 1)
+          crib = make Crib (2, 2)
+          dirt = makeMany Dirt [(0, 2), (2, 0)]
+          board = newBoard 3 3 *++ (robot : kid : crib : dirt)
+          agent = Agent robot Nothing
+          tasks = localHandleTasks board [agent]
+          expected = mockInitialMatrix 3 1 [4, 3, 3] [(0, 0), (1, 0), (2, 0)]
+       in getCostMatrix tasks [agent] `shouldBe` expected
+    it "Should produce the correct matrix #2" $
+      let robot1 = make (Robot Nothing) (0, 0)
+          robot2 = make (Robot Nothing) (0, 4)
+          kid = make Kid (2, 2)
+          crib = make Crib (4, 2)
+          dirt = makeMany Dirt [(4, 0), (4, 4)]
+          agents = [Agent robot1 Nothing, Agent robot2 Nothing]
+          board = newBoard 5 5 *++ (robot1 : robot2 : kid : crib : dirt)
+          tasks = localHandleTasks board agents
+          expected =
+            mockInitialMatrix
+              3
+              2
+              [6, 6, 5, 9, 9, 5]
+              [(i, j) | i <- [0 .. 2], j <- [0 .. 1]]
+       in do
+            print (length tasks)
+            getCostMatrix tasks agents `shouldBe` expected
+  where
+    localHandleTasks board agents = findSolvers board (getTasks board agents) agents
+    mockInitialMatrix :: Int -> Int -> [Int] -> [(Int, Int)] -> M.Matrix (Natural, [(Int, Int)])
+    mockInitialMatrix r c vals inds = M.fromList r c (zip (naturals vals) (map (: []) inds))
+
+matrixToTaskTest =
+  describe "Transfrom costMatrix into agents with assigned tasks" $ do
+    it "Should return the correct agent" $
+      3 `shouldBe` 3
+
+optimizationTest =
+  describe "Find the optimum task division" $ do
+    it "Should return the best task divison" $
+      3 `shouldBe` 3
+
+naturals :: [Int] -> [Natural]
+naturals = map natural
+
+natural :: Int -> Natural
+natural val = if val >= 0 then Natural val else Infinite

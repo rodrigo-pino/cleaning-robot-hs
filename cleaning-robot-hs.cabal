@@ -25,17 +25,21 @@ source-repository head
 
 library
   exposed-modules:
+      Agent.Logic.Pathfinding
+      Agent.Logic.TaskDetection
+      Agent.Logic.TaskHandling
+      Agent.Objects
       Lib
       Visual
       World.Board
       World.Objects
-      World.Old
   other-modules:
       Paths_cleaning_robot_hs
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , containers
     , matrix
     , vector
   default-language: Haskell2010
@@ -50,6 +54,7 @@ executable cleaning-robot-hs-exe
   build-depends:
       base >=4.7 && <5
     , cleaning-robot-hs
+    , containers
     , matrix
     , vector
   default-language: Haskell2010
@@ -58,6 +63,8 @@ test-suite cleaning-robot-hs-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      PathfindingSpec
+      TaskHandlingSpec
       VisualSpec
       WorldSpec
       Paths_cleaning_robot_hs
@@ -67,6 +74,7 @@ test-suite cleaning-robot-hs-test
   build-depends:
       base >=4.7 && <5
     , cleaning-robot-hs
+    , containers
     , hspec
     , matrix
     , tasty

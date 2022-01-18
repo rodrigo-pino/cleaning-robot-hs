@@ -17,5 +17,9 @@ main = do
   hspec taskDetectionTest
   -- Agent Pathfinding Specs
   hspec agentPathfindingTest
+  -- Task Handling Specs
+  hspec findTaskTest
+  hspec taskToMatrixTest
+  hspec minimumCostTest
   -- Visual Tests
   hspec visualTest

@@ -27,11 +27,11 @@ findTaskTest = describe "Detect all tasks on board" $ do
 taskToMatrixTest =
   describe "Transform tasks and agents input into a cost matrix" $ do
     it "Should produce the correct matrix #1" $
-      let (tasks, agents) = testData 1
+      let (_, tasks, agents) = testData 1
           expected = mockInitialMatrix 3 1 [4, 3, 3] [(0, 0), (1, 0), (2, 0)]
        in getCostMatrix tasks agents `shouldBe` expected
     it "Should produce the correct matrix #2" $
-      let (tasks, agents) = testData 2
+      let (_, tasks, agents) = testData 2
           expected =
             mockInitialMatrix
               3
@@ -40,7 +40,7 @@ taskToMatrixTest =
               [(i, j) | i <- [0 .. 2], j <- [0 .. 1]]
        in getCostMatrix tasks agents `shouldBe` expected
     it "Should produce the correct matrix #3" $
-      let (tasks, agents) = testData 3
+      let (_, tasks, agents) = testData 3
           expected =
             mockInitialMatrix
               3
@@ -52,6 +52,38 @@ taskToMatrixTest =
     mockInitialMatrix :: Int -> Int -> [Int] -> [(Int, Int)] -> M.Matrix (Natural, [(Int, Int)])
     mockInitialMatrix r c vals inds = M.fromList r c (zip (naturals vals) (map (: []) inds))
 
+minimumCostTest :: SpecWith ()
+minimumCostTest =
+  describe "Find the minimum value in a cost matrix" $ do
+    it "Should return the correct minimum #1" $
+      let (_, tasks, agents) = testData 1
+          initialCostMatrix = getCostMatrix tasks agents
+       in do
+            minimumCost initialCostMatrix (-1, -1) `shouldBe` (Natural 3, (1, 0))
+            minimumCost initialCostMatrix (1, 0) `shouldBe` (Infinite, (-1, -1))
+    it "Should return the correct minimum #2" $
+      let costMatrix =
+            mockMatrix
+              3
+              3
+              [3, 4, 14, 8, 6, 3, 5, 6, 12]
+              [ [(0, 0), (1, 2)],
+                [(0, 1), (1, 2)],
+                [(2, 0), (1, 1)],
+                [(1, 0), (0, 1)],
+                [(1, 1), (0, 0)],
+                [(1, 2), (0, 0)],
+                [(2, 0), (1, 2)],
+                [(2, 1), (1, 2)],
+                [(2, 2), (0, 0)]
+              ]
+       in do
+            minimumCost costMatrix (-1, -1) `shouldBe` (Natural 3, (0, 0))
+            minimumCost costMatrix (0, 0) `shouldBe` (Natural 6, (2, 1))
+  where
+    mockMatrix :: Int -> Int -> [Int] -> [[(Int, Int)]] -> M.Matrix (Natural, [(Int, Int)])
+    mockMatrix r c vals inds = M.fromList r c (zip (naturals vals) inds)
+
 optimizationTest =
   describe "Find the optimum task division" $ do
     it "Should return the best task divison" $
@@ -62,7 +94,7 @@ matrixToTaskTest =
     it "Should return the correct agent" $
       3 `shouldBe` 3
 
-testData :: Int -> ([Task], [Agent])
+testData :: Int -> (Board, [Task], [Agent])
 testData num
   | num == 1 =
     let robot = make (Robot Nothing) (0, 0)
@@ -72,7 +104,7 @@ testData num
         board = newBoard 3 3 *++ (robot : kid : crib : dirt)
         agent = Agent robot Nothing
         tasks = localHandleTasks board [agent]
-     in (tasks, [agent])
+     in (board, tasks, [agent])
   | num == 2 =
     let robot1 = make (Robot Nothing) (0, 0)
         robot2 = make (Robot Nothing) (0, 4)
@@ -82,7 +114,7 @@ testData num
         agents = [Agent robot1 Nothing, Agent robot2 Nothing]
         board = newBoard 5 5 *++ (robot1 : robot2 : kid : crib : dirt)
         tasks = localHandleTasks board agents
-     in (tasks, agents)
+     in (board, tasks, agents)
   | num == 3 =
     let robot1 = make (Robot Nothing) (0, 0)
         robot2 = make (Robot Nothing) (0, 4)
@@ -93,7 +125,8 @@ testData num
         agents = [Agent robot1 Nothing, Agent robot2 Nothing]
         board = newBoard 5 5 *++ ([robot1, robot2, kid, crib] ++ obstacles ++ dirt)
         tasks = localHandleTasks board agents
-     in (tasks, agents)
+     in (board, tasks, agents)
+  | otherwise = error "Invalid test data"
   where
     localHandleTasks board agents = findSolvers board (getTasks board agents) agents
 

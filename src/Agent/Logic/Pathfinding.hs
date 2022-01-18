@@ -1,7 +1,7 @@
 module Agent.Logic.Pathfinding where
 
 import Agent.Objects
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, isJust)
 import Data.Sequence (Seq (..))
 import qualified Data.Sequence as Seq
 import Data.Set (Set, insert, member)
@@ -43,11 +43,11 @@ findSolvers board tasks (ag : agents) = findSolvers board updatedTasks agents
       [ newTask
         | taskx <- tasks,
           let solversx = solvers taskx,
-          (obj, time) <- foundTasks,
-          let newSolver = Solver ag time,
+          let targetx = target taskx,
+          let time = lookup targetx foundTasks,
           let newTask =
-                if target taskx == obj
-                  then Task obj (newSolver : solversx)
+                if isJust time
+                  then Task targetx (Solver ag (fromJust time) : solversx)
                   else taskx
       ]
 

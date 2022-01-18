@@ -51,9 +51,24 @@ taskToMatrixTest =
               2
               [6, 6, 5, 9, 9, 5]
               [(i, j) | i <- [0 .. 2], j <- [0 .. 1]]
-       in do
-            print (length tasks)
-            getCostMatrix tasks agents `shouldBe` expected
+       in getCostMatrix tasks agents `shouldBe` expected
+    it "Should produce the correct matrix #3" $
+      let robot1 = make (Robot Nothing) (0, 0)
+          robot2 = make (Robot Nothing) (0, 4)
+          kid = make Kid (2, 1)
+          crib = make Crib (4, 1)
+          dirt = makeMany Dirt [(4, 0), (4, 4)]
+          obstacles = makeMany Obstacle [(i, 2) | i <- [0 .. 4]]
+          agents = [Agent robot1 Nothing, Agent robot2 Nothing]
+          board = newBoard 5 5 *++ ([robot1, robot2, kid, crib] ++ obstacles ++ dirt)
+          tasks = localHandleTasks board agents
+          expected =
+            mockInitialMatrix
+              3
+              2
+              [5, -1, 5, -1, -1, 5]
+              [(i, j) | i <- [0 .. 2], j <- [0 .. 1]]
+       in getCostMatrix tasks agents `shouldBe` expected
   where
     localHandleTasks board agents = findSolvers board (getTasks board agents) agents
     mockInitialMatrix :: Int -> Int -> [Int] -> [(Int, Int)] -> M.Matrix (Natural, [(Int, Int)])

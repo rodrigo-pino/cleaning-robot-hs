@@ -2,6 +2,7 @@ module PathfindingSpec where
 
 import Agent.Logic.Pathfinding hiding (make)
 import Agent.Objects
+import Data.List (nub)
 import Test.Hspec
 import Test.Tasty
 import Test.Tasty.Hspec
@@ -81,8 +82,23 @@ taskDetectionTest =
           tasks = [objToTask [] crib]
        in findSolvers board tasks [agent1, agent2]
             `shouldBe` [objToTask [Solver agent1 (Natural 5), Solver agent2 (Natural 5)] crib]
+    it "Each agent should detect all tasks" $
+      let robot1 = make (Robot Nothing) (0, 0)
+          robot2 = make (Robot Nothing) (0, 4)
+          crib = make Crib (4, 2)
+          kid = make Kid (0, 2)
+          dirt = makeMany Dirt [(4, 0), (4, 4)]
+          board = newBoard 5 5 *++ (robot1 : robot2 : crib : kid : dirt)
+          agents = [Agent robot1 Nothing, Agent robot2 Nothing]
+          tasks = map (objToTask []) (crib : dirt)
+       in findSolvers board tasks agents
+            `shouldBe` [ objToTask (zipWith (curry agnToSolver) agents [5, 5]) crib,
+                         objToTask (zipWith (curry agnToSolver) agents [5, 8]) (head dirt),
+                         objToTask (zipWith (curry agnToSolver) agents [8, 5]) (dirt !! 1)
+                       ]
   where
     objToTask slv obj = Task obj slv
+    agnToSolver (agn, time) = Solver agn time
     baseBoard = newBoard 5 5
 
 agentPathfindingTest :: SpecWith ()

@@ -2,7 +2,8 @@ module Agent.Objects where
 
 import World.Objects
 
-data AssignedTask = AssignedTask {destinaton :: Object, actions :: [Action Position]} deriving (Show)
+data AssignedTask = AssignedTask {destinaton :: Object, actions :: [Action Position]}
+  deriving (Show)
 
 data Agent = Agent {entity :: Object, task :: Maybe AssignedTask} deriving (Show)
 
@@ -27,7 +28,7 @@ instance Eq Natural where
   n1 == n2 = False
 
 instance Ord Natural where
-  Natural a1 <= Natural a2 = a1 == a2
+  Natural a1 <= Natural a2 = a1 <= a2
   Natural _ <= Infinite = True
   Infinite <= Natural _ = False
   Infinite <= Infinite = False

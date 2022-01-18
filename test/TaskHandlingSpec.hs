@@ -86,8 +86,16 @@ minimumCostTest =
 
 optimizationTest =
   describe "Find the optimum task division" $ do
-    it "Should return the best task divison" $
-      3 `shouldBe` 3
+    it "Should return the best optimum #1" $
+      getOptimum 1 `shouldBe` [(1, 0)]
+    it "Should return the best optimum #2" $
+      getOptimum 2 `shouldBe` [(1, 0), (2, 1)]
+    it "Should return the best optimum #1" $
+      getOptimum 3 `shouldBe` [(0, 0), (2, 1)]
+  where
+    getOptimum num =
+      let (_, tasks, agents) = testData num
+       in optimize (getCostMatrix tasks agents)
 
 matrixToTaskTest =
   describe "Transfrom costMatrix into agents with assigned tasks" $ do

@@ -21,5 +21,6 @@ main = do
   hspec findTaskTest
   hspec taskToMatrixTest
   hspec minimumCostTest
+  hspec optimizationTest
   -- Visual Tests
   hspec visualTest

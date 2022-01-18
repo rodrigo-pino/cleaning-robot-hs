@@ -99,8 +99,31 @@ optimizationTest =
 
 matrixToTaskTest =
   describe "Transfrom costMatrix into agents with assigned tasks" $ do
-    it "Should return the correct agent" $
-      3 `shouldBe` 3
+    it "Should return the correct agent #1" $
+      let (board, tasks, [agent]) = testData 1
+          optimum = optimize (getCostMatrix tasks [agent])
+          result = parseTaskDivision board tasks [agent] optimum
+       in result
+            `shouldBe` [mockAgent agent (make Dirt (4, 0)) ([Move (i, 0) | i <- [0 .. 4]] ++ [Clean (4, 0)])]
+    it "Should return the correct agent #2" $
+      let (board, tasks, [agent1, agent2]) = testData 2
+          optimum = optimize (getCostMatrix tasks [agent1, agent2])
+          result = parseTaskDivision board tasks [agent1, agent2] optimum
+       in result
+            `shouldBe` [ mockAgent agent1 (make Dirt (4, 0)) ([Move (i, 0) | i <- [0 .. 4]] ++ [Clean (4, 0)]),
+                         mockAgent agent2 (make Dirt (4, 4)) ([Move (i, 4) | i <- [0 .. 4]] ++ [Clean (4, 4)])
+                       ]
+  where
+    mockAgent :: Agent -> Object -> [Action (Int, Int)] -> Agent
+    mockAgent agent obj actions = Agent (entity agent) (Just (AssignedTask obj (makeAct actions)))
+    makeAct :: [Action (Int, Int)] -> [Action Position]
+    makeAct (x : xs) =
+      let act = case x of
+            (Clean pos) -> Clean (positionFromTuple pos)
+            (Move pos) -> Move (positionFromTuple pos)
+            (Grab pos) -> Grab (positionFromTuple pos)
+            (Drop pos) -> Drop (positionFromTuple pos)
+       in act : makeAct xs
 
 testData :: Int -> (Board, [Task], [Agent])
 testData num

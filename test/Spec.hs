@@ -12,6 +12,7 @@ main = do
   hspec robotWithoutKidTest
   hspec robotWithKidTest
   hspec actionApplicationTest
+  hspec kidClusterDetection
   -- Task Pathfinding Specs
   hspec taskReachabilityTest
   hspec taskDetectionTest

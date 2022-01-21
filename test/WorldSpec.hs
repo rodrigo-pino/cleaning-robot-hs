@@ -1,5 +1,6 @@
 module WorldSpec where
 
+import qualified Data.Map as Map
 import Test.Hspec
 import Test.Tasty
 import Test.Tasty.Hspec
@@ -19,6 +20,11 @@ boardPrimitiveTest = describe "Basic board function test" $ do
     canPush wholeRow 4 1 `shouldBe` (True, 4)
   it "Obstacle can be pushed backward" $
     canPush wholeRow 4 (-1) `shouldBe` (True, 4)
+  it "Should return the right adyacents" $
+    let ady = adyacentsTo (board *++ makeMany Kid [(1, 1), (2, 2)]) (Position 2 2)
+     in do
+          length ady `shouldBe` 8
+          filter (== [Kid]) ady `shouldBe` [[Kid]]
   where
     rows = 4
     cols = 5
@@ -167,3 +173,19 @@ actionApplicationTest = describe "Update board when actions are applied" $ do
     p24 = Position 2 4
 
 pos = positionFromTuple
+
+kidClusterDetection :: SpecWith ()
+kidClusterDetection = describe "Detect kid clusters" $ do
+  it "Should detect just one kid cluster with one element" $
+    let kid = make Kid (4, 4)
+        clusters = getKidCluster (board *+ kid)
+        expected = Map.singleton kid 0
+     in clusters `shouldBe` expected
+  it "Should detect two kid cluster with 2 elems each" $
+    let [kid1, kid2] = makeMany Kid [(4, 4), (5, 5)]
+        clusters = getKidCluster (board *++ [kid1, kid2])
+        expected = Map.insert kid2 1 (Map.singleton kid1 1)
+     in do
+          clusters `shouldBe` expected
+  where
+    board = newBoard 20 20

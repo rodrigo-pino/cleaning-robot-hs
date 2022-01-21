@@ -91,6 +91,7 @@ movableObstacle (x : xs) acc
   | x == [Obstacle] = movableObstacle xs (acc + 1)
   | otherwise = (False, acc)
 
+getKidCluster :: Board -> Map Object Int
 getKidCluster board = clusters
   where
     kids = getByType board Kid

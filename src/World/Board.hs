@@ -1,6 +1,8 @@
 module World.Board where
 
 import Data.List (delete, nub)
+import Data.Map (Map (..))
+import qualified Data.Map as Map
 import Data.Maybe (catMaybes, fromJust, isJust, isNothing)
 import World.Objects
 
@@ -88,3 +90,11 @@ movableObstacle (x : xs) acc
   | null x = (True, acc + 1)
   | x == [Obstacle] = movableObstacle xs (acc + 1)
   | otherwise = (False, acc)
+
+getKidCluster board = clusters
+  where
+    kids = getByType board Kid
+    clusters = foldl addCluster Map.empty kids
+    addCluster acc kid =
+      let kidsAround = length (filter ([Kid] ==) (adyacentsTo board (position kid)))
+       in Map.insert kid kidsAround acc

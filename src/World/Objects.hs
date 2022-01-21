@@ -4,6 +4,7 @@ module World.Objects where
 
 import Data.List (nub, sort)
 import Data.Maybe
+import Debug.Trace (trace)
 
 data Position = Position {row :: Int, col :: Int}
 
@@ -101,7 +102,16 @@ instance IBoard Board where
         let val = board ! Position i j
     ]
 
+newBoard :: Int -> Int -> Board
 newBoard = Board []
+
+adyacentsTo :: Board -> Position -> [[ObjectType]]
+adyacentsTo board pos = catMaybes [board ! (pos + dir) | dir <- directions1]
+  where
+    directions1 = directions ++ map positionFromTuple [(1, 1), (-1, 1), (1, -1), (-1, -1)]
+
+getByType :: Board -> ObjectType -> [Object]
+getByType board objType = [obj | obj <- elems board, typex obj == objType]
 
 make :: ObjectType -> (Int, Int) -> Object
 make objType pos = Object objType (positionFromTuple pos)

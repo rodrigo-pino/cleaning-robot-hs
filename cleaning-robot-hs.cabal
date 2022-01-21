@@ -33,6 +33,7 @@ library
       Visual
       World.Board
       World.Objects
+      World.Simulate
   other-modules:
       Paths_cleaning_robot_hs
   hs-source-dirs:
@@ -41,6 +42,7 @@ library
       base >=4.7 && <5
     , containers
     , matrix
+    , random
     , vector
   default-language: Haskell2010
 
@@ -56,6 +58,7 @@ executable cleaning-robot-hs-exe
     , cleaning-robot-hs
     , containers
     , matrix
+    , random
     , vector
   default-language: Haskell2010
 
@@ -77,6 +80,7 @@ test-suite cleaning-robot-hs-test
     , containers
     , hspec
     , matrix
+    , random
     , tasty
     , tasty-hspec
     , vector

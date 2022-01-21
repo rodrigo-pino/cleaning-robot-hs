@@ -54,8 +54,11 @@ findSolvers board tasks (ag : agents) = findSolvers board updatedTasks agents
 reachableTasks :: Board -> Agent -> [ReachedTask]
 reachableTasks board agentx = searchAll initialQueue []
   where
-    obj = entity agentx
-    initialQueue = Seq.fromList [(obj, mov, board, Natural 1) | mov <- moves obj board]
+    maybeAssignedTask = task agentx
+    (obj, time) = case maybeAssignedTask of
+      Nothing -> (entity agentx, 1)
+      Just assignedTask -> (destinaton assignedTask, length (actions assignedTask) + 1)
+    initialQueue = Seq.fromList [(obj, mov, board, Natural time) | mov <- moves obj board]
 
 searchAll :: SeqAct -> SetAct -> [ReachedTask]
 searchAll Empty _ = []

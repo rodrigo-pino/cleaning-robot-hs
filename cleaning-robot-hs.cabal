@@ -26,9 +26,9 @@ source-repository head
 library
   exposed-modules:
       Agent.Logic.Pathfinding
-      Agent.Logic.TaskDetection
       Agent.Logic.TaskHandling
       Agent.Objects
+      Agent.Simulate
       Lib
       Visual
       World.Board

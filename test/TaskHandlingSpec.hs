@@ -90,7 +90,7 @@ optimizationTest =
       getOptimum 1 `shouldBe` [(1, 0)]
     it "Should return the best optimum #2" $
       getOptimum 2 `shouldBe` [(1, 0), (2, 1)]
-    it "Should return the best optimum #1" $
+    it "Should return the best optimum #3" $
       getOptimum 3 `shouldBe` [(0, 0), (2, 1)]
   where
     getOptimum num =

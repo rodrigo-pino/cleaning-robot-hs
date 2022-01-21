@@ -4,12 +4,7 @@ import Data.List (delete, nub)
 import Data.Map (Map (..))
 import qualified Data.Map as Map
 import Data.Maybe (catMaybes, fromJust, isJust, isNothing)
-import System.Random
 import World.Objects
-
-main = do
-  g <- newStdGen
-  print $ take 10 (randomRs ('a', 'z') g)
 
 moves :: Object -> Board -> [Action Position]
 moves obj board =
@@ -103,32 +98,3 @@ getKidCluster board = clusters
     addCluster acc kid =
       let kidsAround = length (filter ([Kid] ==) (adyacentsTo board (position kid)))
        in Map.insert kid kidsAround acc
-
-shuffle :: Board -> StdGen -> (Board, StdGen)
-shuffle board g = (Board newElems n m, newG)
-  where
-    (newElems, newG) = relocateObjects boardElems allPos g
-    allPos = [(i, j) | i <- [0 .. n - 1], j <- [0 .. m - 1]]
-    boardElems = elems board
-    n = maxRows board
-    m = maxCols board
-
-relocateObjects :: [Object] -> [(Int, Int)] -> StdGen -> ([Object], StdGen)
-relocateObjects [] _ g = ([], g)
-relocateObjects (obj : objects) positions g = (newObj : newObjs, lastG)
-  where
-    (newPos, remPositions, newG) = getPosition positions g
-    newObj = make (typex obj) newPos
-    (newObjs, lastG) = relocateObjects objects remPositions newG
-
-getPosition :: (Num a, Num b) => [(a, b)] -> StdGen -> ((a, b), [(a, b)], StdGen)
-getPosition [] _ = error "Out of positions"
-getPosition positions g = (selectedPos, remPositions, newG)
-  where
-    nextP :: Int
-    (nextP, newG) = randomR (0, length positions) g
-
-    (selectedPos, _, remPositions) = foldl extract ((-1, -1), 0, []) positions
-    extract (ext, i, list) val
-      | i == nextP = (val, i + 1, list)
-      | otherwise = (ext, i + 1, val : list)

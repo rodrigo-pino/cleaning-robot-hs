@@ -105,10 +105,15 @@ instance IBoard Board where
 newBoard :: Int -> Int -> Board
 newBoard = Board []
 
+-- Returns all adyacent ObjecTypes of a certain position
 adyacentsTo :: Board -> Position -> [[ObjectType]]
 adyacentsTo board pos = catMaybes [board ! (pos + dir) | dir <- directions1]
+
+-- Returns empty positios around a position. If the position is empty it is returned as well
+emptyAround :: Board -> Position -> [Position]
+emptyAround board pos = [pos + dir | dir <- p0 : directions1, null (board ! (pos + dir))]
   where
-    directions1 = directions ++ map positionFromTuple [(1, 1), (-1, 1), (1, -1), (-1, -1)]
+    p0 = Position 0 0
 
 getByType :: Board -> ObjectType -> [Object]
 getByType board objType = [obj | obj <- elems board, typex obj == objType]
@@ -127,6 +132,9 @@ tupleFromPosition (Position x y) = (x, y)
 
 directions :: [Position]
 directions = map positionFromTuple [(1, 0), (-1, 0), (0, 1), (0, -1)]
+
+directions1 :: [Position]
+directions1 = directions ++ map positionFromTuple [(1, 1), (-1, 1), (1, -1), (-1, -1)]
 
 directions2 :: [Position]
 directions2 = directions ++ nub [d1 + d2 | d1 <- directions, d2 <- directions]

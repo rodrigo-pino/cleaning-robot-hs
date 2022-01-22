@@ -69,6 +69,7 @@ test-suite cleaning-robot-hs-test
       PathfindingSpec
       TaskHandlingSpec
       VisualSpec
+      WorldSimulateSpec
       WorldSpec
       Paths_cleaning_robot_hs
   hs-source-dirs:

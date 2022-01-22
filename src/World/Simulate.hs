@@ -3,6 +3,7 @@ module World.Simulate where
 import Data.Map (Map (..))
 import qualified Data.Map as Map
 import Data.Maybe (fromJust)
+import Debug.Trace (trace)
 import System.Random
 import World.Board
 import World.Objects hiding ((!))
@@ -64,10 +65,10 @@ relocateObjects (obj : objects) positions g = (newObj : newObjs, lastG)
 
 getRandom :: [a] -> StdGen -> (a, [a], StdGen)
 getRandom [] _ = error "Out of positions"
-getRandom positions g = (selectedPos, remPositions, newG)
+getRandom positions g = (selectedPos, reverse remPositions, newG)
   where
     nextP :: Int
-    (nextP, newG) = randomR (0, length positions) g
+    (nextP, newG) = randomR (0, length positions - 1) g
 
     (Just selectedPos, _, remPositions) = foldl extract (Nothing, 0, []) positions
     extract (ext, i, list) val

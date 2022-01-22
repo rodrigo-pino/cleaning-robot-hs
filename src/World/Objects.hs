@@ -111,7 +111,12 @@ adyacentsTo board pos = catMaybes [board ! (pos + dir) | dir <- directions1]
 
 -- Returns empty positios around a position. If the position is empty it is returned as well
 emptyAround :: Board -> Position -> [Position]
-emptyAround board pos = [pos + dir | dir <- p0 : directions1, null (board ! (pos + dir))]
+emptyAround board pos =
+  [ pos + dir
+    | dir <- p0 : directions1,
+      let cell = board ! (pos + dir),
+      isJust cell && null (fromJust cell)
+  ]
   where
     p0 = Position 0 0
 

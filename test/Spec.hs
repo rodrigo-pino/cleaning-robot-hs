@@ -2,6 +2,7 @@ import PathfindingSpec
 import TaskHandlingSpec
 import Test.Hspec (hspec)
 import VisualSpec
+import WorldSimulateSpec
 import WorldSpec
 
 main :: IO ()
@@ -13,6 +14,10 @@ main = do
   hspec robotWithKidTest
   hspec actionApplicationTest
   hspec kidClusterDetection
+  -- Board Simulation
+  hspec testRandomPicking
+  hspec testBoardShuffling
+  hspec testKidMovement
   -- Task Pathfinding Specs
   hspec taskReachabilityTest
   hspec taskDetectionTest

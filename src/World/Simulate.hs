@@ -28,11 +28,11 @@ moveKids board g =
       | otherwise =
         let updatedBoard = applyMove kid nextMove board
             emptyNear = emptyAround updatedBoard (position kid)
-            dirtAmount = case kidsNear of
-              0 -> 1
-              1 -> 3
-              _ -> 6
-         in toDirt updatedBoard emptyNear dirtAmount newG
+            (dirtAmount, newNewG) = case kidsNear of
+              0 -> randomR (0, 1) newG
+              1 -> randomR (0, 3) newG
+              _ -> randomR (0, 6) newG
+         in toDirt updatedBoard emptyNear dirtAmount newNewG
       where
         posMoves = moves kid board
         nextMove = head posMoves

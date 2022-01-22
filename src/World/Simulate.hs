@@ -21,7 +21,7 @@ moveKids board g =
   let kidCluster = getKidCluster board
    in Map.foldlWithKey toMoveOrNotMove (board, g) kidCluster
   where
-    -- acc -> key -> val
+    -- (acc -> key -> val) -> acc
     toMoveOrNotMove :: (Board, StdGen) -> Object -> Int -> (Board, StdGen)
     toMoveOrNotMove (board, g) kid kidsNear
       | nextStep >= length posMoves = (board, newG)

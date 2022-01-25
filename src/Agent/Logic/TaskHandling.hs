@@ -9,8 +9,8 @@ import Debug.Trace (trace)
 import qualified GHC.Arr as A
 import World.Objects
 
-handleTasks :: Board -> [Agent] -> [Agent]
-handleTasks board agents = getOptimalTaskDivison board tasks agents
+assignTasks :: Board -> [Agent] -> [Agent]
+assignTasks board agents = getOptimalTaskDivison board tasks agents
   where
     tasks = findSolvers board (getTasks board agents) agents
 

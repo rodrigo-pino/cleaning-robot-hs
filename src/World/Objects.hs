@@ -105,6 +105,17 @@ instance IBoard Board where
 newBoard :: Int -> Int -> Board
 newBoard = Board []
 
+popTypes :: Board -> [ObjectType] -> (Board, [Object])
+popTypes board objTypes = (Board keep n m, remove)
+  where
+    m = maxCols board
+    n = maxCols board
+    (remove, keep) = foldl popFunc ([], []) (elems board)
+    popFunc (remove, keep) val =
+      if typex val `elem` objTypes
+        then (val : remove, keep)
+        else (remove, val : keep)
+
 -- Returns all adyacent ObjecTypes of a certain position
 adyacentsTo :: Board -> Position -> [[ObjectType]]
 adyacentsTo board pos = catMaybes [board ! (pos + dir) | dir <- directions1]
@@ -122,6 +133,9 @@ emptyAround board pos =
 
 getByType :: Board -> ObjectType -> [Object]
 getByType board objType = [obj | obj <- elems board, typex obj == objType]
+
+getByTypes :: Board -> [ObjectType] -> [Object]
+getByTypes board objTypes = [obj | obj <- elems board, typex obj `elem` objTypes]
 
 make :: ObjectType -> (Int, Int) -> Object
 make objType pos = Object objType (positionFromTuple pos)

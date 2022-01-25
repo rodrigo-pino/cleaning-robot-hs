@@ -1,35 +1,66 @@
 module Agent.Simulate where
 
-import Agent.Logic.Pathfinding (localApplyMove)
+import Agent.Logic.Pathfinding (localApplyMove, pathToTask)
+import Agent.Logic.TaskHandling (assignTasks)
 import Agent.Objects
-import Data.Maybe (isNothing)
+import Data.Maybe (fromJust, isNothing)
 import World.Objects
 
-initAgents :: Board -> [Agent]
-initAgents board = [Agent robot Nothing | robot <- robots]
+agentInit :: Board -> [Agent]
+agentInit board = [Agent robot Nothing | robot <- robots]
   where
     robots = [obj | obj <- elems board, typex obj `elem` [Robot Nothing, Robot (Just Kid)]]
 
-handleAgents :: Board -> [Agent] -> (Board, [Agent])
-handleAgents board agents = (board, agents)
+agentSim :: Board -> [Agent] -> (Board, [Agent])
+agentSim originalBoard allAgents = (board2, movedAgents1 ++ movedAgents2)
   where
-    (updatedBoard, updatedAgents) = moveAgents board agents
-    missionLess = [ag | ag <- updatedAgents, isNothing (task ag)]
+    (board1, agents1) = moveAgents allAgents originalBoard allAgents
+    (board2, movedAgents2) = moveAgents allAgents board1 notMovedAgents
 
-moveAgents :: Board -> [Agent] -> (Board, [Agent])
-moveAgents board [] = (board, [])
-moveAgents board (ag : agents) =
-  let (restulBoard, resultAgents) = moveAgents updBoard agents
-   in (restulBoard, updAgent : resultAgents)
+    assignedAgents = assignTasks board1 movedAgents1
+    (notMovedAgents, movedAgents1) = foldl f ([], []) (zip movedAgents1 assignedAgents)
+    f (notM, m) (a1, a2) = if isNothing (task a1) then (a2 : notM, m) else (notM, a2 : m)
+
+moveAgents :: [Agent] -> Board -> [Agent] -> (Board, [Agent])
+moveAgents _ board [] = (board, [])
+moveAgents allAgents board (ag : agents) =
+  if isNothing (task ag)
+    then
+      let (rBoard, rAgents) = moveAgents allAgents board agents
+       in (rBoard, ag : rAgents)
+    else
+      let (rBoard, rAgents) = moveAgents allAgents updBoard agents
+       in (rBoard, updAgent : rAgents)
   where
-    action = Move (Position 1 1) --recalculate path from agent to target
-    updAgent = ag
-    updBoard = case task ag of
-      Nothing -> board
-      _ -> board
+    (updBoard, updAgent) =
+      if null actions
+        then (board, unassingAgent ag)
+        else agentApplyMove board ag act -- remove missionless agents
+    actions =
+      let path = pathToTask board ag objective
+          agentlessBoard = removeActiveAgents board allAgents
+       in if null path
+            then pathToTask agentlessBoard ag objective
+            else path
+    objective = fromJust (getTask ag)
+    act = head actions
 
 agentApplyMove :: Board -> Agent -> Action Position -> (Board, Agent)
-agentApplyMove board agent action = (updBoard, Agent updObj (task agent))
+agentApplyMove board agent action
+  | robotBlock = (board, agent)
+  | otherwise =
+    let (updObj, updBoard) = localApplyMove board (entity agent) action
+     in (updBoard, Agent updObj (task agent))
   where
-    oldObj = entity agent
-    (updObj, updBoard) = localApplyMove board oldObj action
+    objs = fromJust (board ! value action)
+    robotBlock =
+      Robot Nothing `elem` objs
+        || Robot (Just Kid) `elem` objs
+
+removeActiveAgents :: Board -> [Agent] -> Board
+removeActiveAgents board agents = board *-- remove
+  where
+    robots = getByTypes board [Robot Nothing, Robot (Just Kid)]
+    remove = foldl f [] robots
+    f acc val = if hasMission val then acc else val : acc
+    hasMission robot = any (\a -> entity a == robot) agents

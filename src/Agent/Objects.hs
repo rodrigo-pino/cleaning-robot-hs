@@ -1,5 +1,6 @@
 module Agent.Objects where
 
+import Data.Maybe (fromJust, isNothing)
 import World.Objects
 
 data AssignedTask = AssignedTask {destinaton :: Object, actions :: [Action Position]}
@@ -50,3 +51,14 @@ alreadyAssigned _ [] = False
 alreadyAssigned task (aTask : aTasks)
   | target task == destinaton aTask = True
   | otherwise = alreadyAssigned task aTasks
+
+getTask :: Agent -> Maybe Object
+getTask ag =
+  if isNothing maybeTask
+    then Nothing
+    else Just (destinaton justTask)
+  where
+    maybeTask = task ag
+    justTask = fromJust maybeTask
+
+unassingAgent (Agent obj _) = Agent obj Nothing

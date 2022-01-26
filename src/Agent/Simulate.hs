@@ -55,7 +55,8 @@ agentApplyMove board agent action
   where
     objs = fromJust (board ! value action)
     robotBlock =
-      Robot Nothing `elem` objs
+      value action /= (position . entity) agent
+        && Robot Nothing `elem` objs
         || Robot (Just Kid) `elem` objs
 
 removeActiveAgents :: Board -> [Agent] -> Board
@@ -63,5 +64,5 @@ removeActiveAgents board agents = board *-- remove
   where
     robots = getByTypes board [Robot Nothing, Robot (Just Kid)]
     remove = foldl f [] robots
-    f acc val = if hasMission val then trace "AwM" acc else trace "A" (val : acc)
+    f acc val = if hasMission val then acc else val : acc
     hasMission robot = any (\a -> entity a == robot && (isJust . task) a) agents

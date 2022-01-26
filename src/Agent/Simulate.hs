@@ -56,8 +56,9 @@ agentApplyMove board agent action
     objs = fromJust (board ! value action)
     robotBlock =
       value action /= (position . entity) agent
-        && Robot Nothing `elem` objs
-        || Robot (Just Kid) `elem` objs
+        && ( Robot Nothing `elem` objs
+               || Robot (Just Kid) `elem` objs
+           )
 
 removeActiveAgents :: Board -> [Agent] -> Board
 removeActiveAgents board agents = board *-- remove

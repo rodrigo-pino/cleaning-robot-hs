@@ -1,3 +1,4 @@
+import AgentSimulateSpec
 import PathfindingSpec
 import TaskHandlingSpec
 import Test.Hspec (hspec)
@@ -7,14 +8,14 @@ import WorldSpec
 
 main :: IO ()
 main = do
-  -- Board Rules Tests
+  -- Board Rules Specs
   hspec boardPrimitiveTest
   hspec kidTest
   hspec robotWithoutKidTest
   hspec robotWithKidTest
   hspec actionApplicationTest
   hspec kidClusterDetection
-  -- Board Simulation
+  -- Board Simulation Specs
   hspec testRandomPicking
   hspec testBoardShuffling
   hspec testKidMovement
@@ -29,5 +30,8 @@ main = do
   hspec minimumCostTest
   hspec optimizationTest
   hspec matrixToTaskTest
+  -- Agent Simulation Specs
+  hspec removeActiveAgentsTest
+  hspec agentApplyMoveTest
   -- Visual Tests
   hspec visualTest

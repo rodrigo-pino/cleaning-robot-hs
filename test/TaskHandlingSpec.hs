@@ -3,7 +3,10 @@ module TaskHandlingSpec where
 import Agent.Logic.Pathfinding hiding (make)
 import Agent.Logic.TaskHandling
 import Agent.Objects
-import Data.Matrix as M
+import Data.List (intersect, sort)
+import qualified Data.Matrix as M
+import Data.Maybe (fromJust)
+import Debug.Trace (trace)
 import Test.Hspec
 import Test.Tasty
 import Test.Tasty.Hspec
@@ -92,6 +95,8 @@ optimizationTest =
       getOptimum 2 `shouldBe` [(1, 0), (2, 1)]
     it "Should return the best optimum #3" $
       getOptimum 3 `shouldBe` [(0, 0), (2, 1)]
+    it "Should return the best optimum #4" $
+      sort (getOptimum 4) `shouldBe` [(0, 0), (1, 1), (2, 2)]
   where
     getOptimum num =
       let (_, tasks, agents) = testData num
@@ -137,6 +142,14 @@ assignTaskTest = describe "Correct assignation of tasks to agents" $ do
           ]
         assigned = assignTasks board agents
      in assigned `shouldBe` agents
+  it "Should assign different tasks to each agent" $
+    let dirts@[dirt1, dirt2, dirt3] = makeMany Dirt [(4, 0), (0, 4), (2, 2)]
+        robots = makeMany (Robot Nothing) [(6, i * 2) | i <- [0 .. 2]]
+        board = newBoard 7 5 *++ (dirts ++ robots)
+        agents = [mockAgent ent [] ent | ent <- robots]
+        resultAgents = assignTasks board agents
+        resultDest = map (destinaton . fromJust . task) resultAgents
+     in length (resultDest `intersect` dirts) `shouldBe` length dirts
   where
     mockAgent :: Object -> [Action Position] -> Object -> Agent
     mockAgent obj [] _ = Agent obj Nothing
@@ -172,6 +185,13 @@ testData num
         obstacles = makeMany Obstacle [(i, 2) | i <- [0 .. 4]]
         agents = [Agent robot1 Nothing, Agent robot2 Nothing]
         board = newBoard 5 5 *++ ([robot1, robot2, kid, crib] ++ obstacles ++ dirt)
+        tasks = localHandleTasks board agents
+     in (board, tasks, agents)
+  | num == 4 =
+    let dirts = makeMany Dirt [(4, 0), (2, 2), (0, 4)]
+        robots = makeMany (Robot Nothing) [(6, i * 2) | i <- [0 .. 2]]
+        board = newBoard 7 5 *++ (dirts ++ robots)
+        agents = [Agent ent Nothing | ent <- robots]
         tasks = localHandleTasks board agents
      in (board, tasks, agents)
   | otherwise = error "Invalid test data"

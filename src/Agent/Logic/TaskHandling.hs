@@ -9,6 +9,9 @@ import Debug.Trace (trace)
 import qualified GHC.Arr as A
 import World.Objects
 
+-- Minimum value and its position, current coordinates
+type Acc = ((Natural, (Int, Int)), (Int, Int))
+
 assignTasks :: Board -> [Agent] -> [Agent]
 assignTasks board agents = getOptimalTaskDivison board tasks agents
   where
@@ -43,7 +46,7 @@ optimize costMatrix =
   let minMatrix = dp A.! (m - 1)
       (nat, minInd) = minimumCost minMatrix (-1, -1)
    in case nat of
-        Natural c -> trace ("Min Ind" ++ show minInd) (snd (minMatrix M.! valid minInd))
+        Natural c -> snd (minMatrix M.! valid minInd)
         Infinite -> []
   where
     n = M.nrows costMatrix
@@ -67,9 +70,6 @@ optimize costMatrix =
       where
         prevMatrix = dp A.! (k - 1)
 
--- Minimum value and its position, current coordinates
-type Acc = ((Natural, (Int, Int)), (Int, Int))
-
 minimumCost :: M.Matrix (Natural, [(Int, Int)]) -> (Int, Int) -> (Natural, (Int, Int))
 minimumCost costMatrix currentIndex = fst (foldl f ((Infinite, (-1, -1)), (0, 0)) costMatrix)
   where
@@ -79,8 +79,7 @@ minimumCost costMatrix currentIndex = fst (foldl f ((Infinite, (-1, -1)), (0, 0)
     f :: Acc -> (Natural, [(Int, Int)]) -> Acc
     f ((minVal, minInd), ind) (nat, ignore)
       | nat < minVal
-          && (currentIndex `hardNotEq` ind)
-          && (currentIndex `notElem` ignore) =
+          && (currentIndex `hardNotEq` (ind : ignore)) =
         ((nat, ind), incIndex ind)
       | otherwise = ((minVal, minInd), incIndex ind)
 
@@ -90,7 +89,8 @@ minimumCost costMatrix currentIndex = fst (foldl f ((Infinite, (-1, -1)), (0, 0)
       | j == m - 1 = (i + 1, 0)
       | otherwise = (i, j + 1)
 
-    hardNotEq val1 val2 = fst val1 /= fst val2 && snd val1 /= snd val2
+    hardNotEq v [] = True
+    hardNotEq v (x : xs) = fst v /= fst x && snd v /= snd x && hardNotEq v xs
 
 -- Get tasks agents and how they will be split, and returns new tasks
 parseTaskDivision :: Board -> [Task] -> [Agent] -> [(Int, Int)] -> [Agent]

@@ -52,7 +52,7 @@ findSolvers board tasks (ag : agents) = findSolvers board updatedTasks agents
       ]
 
 reachableTasks :: Board -> Agent -> [ReachedTask]
-reachableTasks board agentx = searchAll initialQueue []
+reachableTasks board agentx = trace "Reachable Tasks" searchAll initialQueue []
   where
     maybeAssignedTask = task agentx
     (obj, time) = case maybeAssignedTask of
@@ -80,7 +80,7 @@ searchAll ((prevObj, act, board, time) :<| queue) visited
     nextQueue = foldl (\acc val -> acc :|> (nextObj, val, nextBoard, nextTime)) queue nextMoves
 
 pathToTask :: Board -> Agent -> Object -> [Action Position]
-pathToTask board agentx targetx = pathfind targetx initialQueue []
+pathToTask board agentx targetx = trace "Path to taks" pathfind targetx initialQueue []
   where
     obj = entity agentx
     initialQueue = Seq.fromList [(obj, mov, board, []) | mov <- moves obj board]

@@ -44,7 +44,7 @@ instance Ord Object where
   obj1 <= obj2 = position obj1 <= position obj2 && typex obj1 <= typex obj2
 
 instance Show Object where
-  show obj = "{" ++ show (typex obj) ++ "," ++ show (position obj) ++ "}"
+  show obj = "{" ++ show (typex obj) ++ ":" ++ show (position obj) ++ "}"
 
 class Movable a where
   update :: a -> Position -> a

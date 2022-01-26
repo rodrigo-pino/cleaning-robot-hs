@@ -19,7 +19,7 @@ moves obj board =
            in nub (fstSteps ++ sndSteps)
         Robot Nothing -> map (move obj board) directions0
         Kid -> map (move obj board) directions
-        _ -> error "Movement is not defined for this object"
+        _ -> error ("Movement is not defined for object: " ++ show obj)
    in catMaybes allMoves
   where
     directions0 = directions ++ [Position 0 0]

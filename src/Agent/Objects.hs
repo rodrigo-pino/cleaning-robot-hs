@@ -6,13 +6,18 @@ import World.Objects
 data AssignedTask = AssignedTask {destinaton :: Object, actions :: [Action Position]}
   deriving (Show)
 
-data Agent = Agent {entity :: Object, task :: Maybe AssignedTask} deriving (Show)
+data Agent = Agent {entity :: Object, task :: Maybe AssignedTask}
 
 data Solver = Solver {agent :: Agent, time :: Natural} deriving (Show)
 
 data Task = Task {target :: Object, solvers :: [Solver]} deriving (Show)
 
 data Natural = Natural Int | Infinite deriving (Show)
+
+instance Show Agent where
+  show (Agent entity Nothing) = "Agent: " ++ show entity ++ " Unassigned"
+  show (Agent entity (Just aTask)) =
+    "Agent: " ++ show entity ++ " Assigned to: " ++ show (destinaton aTask)
 
 instance Eq Agent where
   a1 == a2 = entity a1 == entity a2

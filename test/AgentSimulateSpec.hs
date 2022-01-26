@@ -81,11 +81,34 @@ agentApplyMoveTest = describe "Move an agent through the board" $ do
 moveAgentsTest :: SpecWith ()
 moveAgentsTest = describe "Move all posible agents" $ do
   it "Should move the agents" $
-    let x = 3
-     in 3 `shouldBe` 3
-  it "Should move the agents and made another missionles" $
-    let x = 3
-     in 3 `shouldBe` 3
+    let dirts = makeMany Dirt [(0, 0), (0, 2), (0, 4)]
+        robots = makeMany (Robot Nothing) [(4, 0), (4, 2), (4, 4)]
+        actions = [Move (Position 3 (2 * i)) | i <- [0 .. 2]]
+        agents = [mockAgent obj [move] t | (obj, move, t) <- zip3 robots actions dirts]
+        board = newBoard 5 5 *++ (dirts ++ robots)
+        (resultBoard, resultAgent) = moveAgents agents board agents
+
+        expectedRobots = makeMany (Robot Nothing) [(3, 0), (3, 2), (3, 4)]
+        expectedAgents =
+          [ mockAgent obj [move] t
+            | (obj, move, t) <- zip3 expectedRobots actions dirts
+          ]
+        expectedBoard = newBoard 5 5 *++ (dirts ++ expectedRobots)
+     in do
+          resultAgent `shouldBe` expectedAgents
+          resultBoard `shouldBe` expectedBoard
+  it "Should remove tasks from blocked ones" $
+    let obstacles = makeMany Obstacle [(3, 2), (2, 3), (1, 2), (2, 1)]
+        dirt = make Dirt (0, 0)
+        move = Move (Position 2 1)
+        robot = make (Robot Nothing) (2, 2)
+        agent = mockAgent robot [move] dirt
+        board = newBoard 5 5 *++ (dirt : robot : obstacles)
+        (resultBoard, [resultAgent]) = moveAgents [agent] board [agent]
+        expectedAgent = mockAgent robot [] dirt
+     in do
+          resultAgent `shouldBe` expectedAgent
+          resultBoard `shouldBe` board
 
 agentSimTest :: SpecWith ()
 agentSimTest = describe "Agents should do all tasks" $ do

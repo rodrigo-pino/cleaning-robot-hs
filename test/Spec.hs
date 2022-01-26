@@ -33,5 +33,6 @@ main = do
   -- Agent Simulation Specs
   hspec removeActiveAgentsTest
   hspec agentApplyMoveTest
+  hspec moveAgentsTest
   -- Visual Tests
   hspec visualTest

@@ -18,9 +18,10 @@ agentSim originalBoard allAgents = (board2, movedAgents1 ++ movedAgents2)
     (board1, agents1) = moveAgents allAgents originalBoard allAgents
     (board2, movedAgents2) = moveAgents allAgents board1 notMovedAgents
 
-    assignedAgents = assignTasks board1 movedAgents1
     (notMovedAgents, movedAgents1) = foldl f ([], []) (zip movedAgents1 assignedAgents)
     f (notM, m) (a1, a2) = if isNothing (task a1) then (a2 : notM, m) else (notM, a2 : m)
+
+    assignedAgents = assignTasks board1 movedAgents1
 
 moveAgents :: [Agent] -> Board -> [Agent] -> (Board, [Agent])
 moveAgents _ board [] = (board, [])

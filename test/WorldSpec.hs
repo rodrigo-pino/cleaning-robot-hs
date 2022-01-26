@@ -160,9 +160,9 @@ actionApplicationTest = describe "Update board when actions are applied" $ do
      in elems result `shouldBe` [make Kid (2, 2), make (Robot Nothing) (2, 2)]
   it "Should push obstacle correctly" $
     let obstacles = makeMany Obstacle [(2, 2), (2, 3)]
-        endResult = [make Obstacle (2, 3), make Kid (2, 2), make Obstacle (2, 4)]
         kid = make Kid (2, 1)
         result = applyMove kid (Push p22 p24) (board *++ obstacles)
+        endResult = [make Obstacle (2, 3), make Kid (2, 2), make Obstacle (2, 4)]
      in elems result `shouldBe` endResult
   where
     board = newBoard 5 5

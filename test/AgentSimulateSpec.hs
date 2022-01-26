@@ -2,25 +2,28 @@ module AgentSimulateSpec where
 
 import Agent.Objects
 import Agent.Simulate
+import Debug.Trace (trace)
 import Test.Hspec
 import Test.Tasty
 import Test.Tasty.Hspec
+import Visual (printState)
 import World.Board
 import World.Objects
 import World.Simulate
 
 removeActiveAgentsTest :: SpecWith ()
-removeActiveAgentsTest = describe "Remove robots owned by active agents" $ do
-  it "Should remove all active agents" $
-    let dirt = make Dirt (2, 2)
-        r1@[robot1, robot2] = makeMany (Robot Nothing) [(0, 0), (0, 1)]
-        r2@[robot3, robot4] = makeMany (Robot (Just Kid)) [(0, 2), (0, 3)]
-        a1@[ag1, ag3] = [mockAgent robi [] dirt | robi <- [robot1, robot3]]
-        a2@[ag2, ag4] = [mockAgent robi [Move (Position 1 0)] dirt | robi <- [robot2, robot4]]
-        board = newBoard 2 4
-        resultBoard = removeActiveAgents (board *++ r1 *++ r2) (a1 ++ a2)
-        expectedBoard = board *++ [robot2, robot4]
-     in resultBoard `shouldBe` expectedBoard
+removeActiveAgentsTest =
+  describe "Remove robots owned by active agents" $
+    it "Should remove all active agents" $
+      let dirt = make Dirt (2, 2)
+          r1@[robot1, robot2] = makeMany (Robot Nothing) [(0, 0), (0, 1)]
+          r2@[robot3, robot4] = makeMany (Robot (Just Kid)) [(0, 2), (0, 3)]
+          a1@[ag1, ag3] = [mockAgent robi [] dirt | robi <- [robot1, robot3]]
+          a2@[ag2, ag4] = [mockAgent robi [Move (Position 1 0)] dirt | robi <- [robot2, robot4]]
+          board = newBoard 2 4
+          resultBoard = removeActiveAgents (board *++ r1 *++ r2) (a1 ++ a2)
+          expectedBoard = board *++ [robot2, robot4]
+       in resultBoard `shouldBe` expectedBoard
 
 agentApplyMoveTest :: SpecWith ()
 agentApplyMoveTest = describe "Move an agent through the board" $ do
@@ -113,11 +116,27 @@ moveAgentsTest = describe "Move all posible agents" $ do
 agentSimTest :: SpecWith ()
 agentSimTest = describe "Agents should do all tasks" $ do
   it "Should move the agents do the tasks #1" $
-    let x = 3
-     in 3 `shouldBe` 3
-  it "Should move the agents to the tasks #2" $ do
-    let x = 3
-     in 3 `shouldBe` 3
+    let dirts = makeMany Dirt [(0, i * 2) | i <- [0 .. 2]]
+        robots = makeMany (Robot Nothing) [(4, i * 2) | i <- [0 .. 2]]
+        board = newBoard 5 5 *++ (dirts ++ robots)
+        agents = agentInit board
+        (resultboard, resultAgent) = loop 5 (board, agents)
+     in getByType resultboard Dirt `shouldBe` []
+  it "Should move the agents to the tasks #2" $
+    let dirts@[dirt1, dirt2, dirt3] = makeMany Dirt [(4, 0), (2, 2), (0, 4)]
+        robots = makeMany (Robot Nothing) [(6, i * 2) | i <- [0 .. 2]]
+        board = newBoard 7 5 *++ (dirts ++ robots)
+        agents = agentInit board
+        (resultBoard1, resultAgent1) = trace "Doing 1" (loop 3 (board, agents))
+        (resultBoard2, resultAgent2) = trace "Doing 2" (loop 3 (resultBoard1, resultAgent1))
+        (resultBoard3, resultAgent3) = trace "Doing 3" (loop 3 (resultBoard2, resultAgent2))
+     in do
+          getByType resultBoard1 Dirt `shouldBe` [dirt2, dirt3]
+          getByType resultBoard2 Dirt `shouldBe` [dirt3]
+          getByType resultBoard3 Dirt `shouldBe` []
+  where
+    loop 0 r = r
+    loop num (board, agents) = loop (num - 1) (agentSim board agents)
 
 mockAgent :: Object -> [Action Position] -> Object -> Agent
 mockAgent obj [] _ = Agent obj Nothing

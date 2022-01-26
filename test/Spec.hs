@@ -30,9 +30,11 @@ main = do
   hspec minimumCostTest
   hspec optimizationTest
   hspec matrixToTaskTest
+  hspec assignTaskTest
   -- Agent Simulation Specs
   hspec removeActiveAgentsTest
   hspec agentApplyMoveTest
   hspec moveAgentsTest
+  hspec agentSimTest
   -- Visual Tests
   hspec visualTest

@@ -125,6 +125,23 @@ matrixToTaskTest =
             (Drop pos) -> Drop (positionFromTuple pos)
        in act : makeAct xs
 
+assignTaskTest = describe "Correct assignation of tasks to agents" $ do
+  it "Should do nothing when all agents are assigned to task" $
+    let dirts = makeMany Dirt [(0, i * 2) | i <- [0 .. 2]]
+        robots = makeMany (Robot Nothing) [(4, i * 2) | i <- [0 .. 2]]
+        moves = [Move (Position 3 (i * 2)) | i <- [0 .. 2]]
+        board = newBoard 5 5 *++ (dirts ++ robots)
+        agents =
+          [ mockAgent ent [mov] target
+            | (ent, mov, target) <- zip3 robots moves dirts
+          ]
+        assigned = assignTasks board agents
+     in assigned `shouldBe` agents
+  where
+    mockAgent :: Object -> [Action Position] -> Object -> Agent
+    mockAgent obj [] _ = Agent obj Nothing
+    mockAgent obj actions targetx = Agent obj (Just (AssignedTask targetx actions))
+
 testData :: Int -> (Board, [Task], [Agent])
 testData num
   | num == 1 =

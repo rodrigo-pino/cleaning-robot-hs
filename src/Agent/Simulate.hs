@@ -3,7 +3,8 @@ module Agent.Simulate where
 import Agent.Logic.Pathfinding (localApplyMove, pathToTask)
 import Agent.Logic.TaskHandling (assignTasks)
 import Agent.Objects
-import Data.Maybe (fromJust, isNothing)
+import Data.Maybe (fromJust, isJust, isNothing)
+import Debug.Trace (trace)
 import World.Objects
 
 agentInit :: Board -> [Agent]
@@ -62,5 +63,5 @@ removeActiveAgents board agents = board *-- remove
   where
     robots = getByTypes board [Robot Nothing, Robot (Just Kid)]
     remove = foldl f [] robots
-    f acc val = if hasMission val then acc else val : acc
-    hasMission robot = any (\a -> entity a == robot) agents
+    f acc val = if hasMission val then trace "AwM" acc else trace "A" (val : acc)
+    hasMission robot = any (\a -> entity a == robot && (isJust . task) a) agents

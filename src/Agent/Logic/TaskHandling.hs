@@ -30,8 +30,9 @@ getTasks board agents = [tsk | tsk <- tasks, target tsk `notElem` takenTasks]
       ]
 
 getOptimalTaskDivison :: Board -> [Task] -> [Agent] -> [Agent]
-getOptimalTaskDivison board tasks agents =
-  parseTaskDivision board tasks agents rawTaskAssignment
+getOptimalTaskDivison board tasks agents
+  | null rawTaskAssignment = agents
+  | otherwise = parseTaskDivision board tasks agents rawTaskAssignment
   where
     costMatrix = getCostMatrix tasks agents
     rawTaskAssignment = optimize costMatrix
@@ -40,8 +41,10 @@ getOptimalTaskDivison board tasks agents =
 optimize :: M.Matrix (Natural, [(Int, Int)]) -> [(Int, Int)]
 optimize costMatrix =
   let minMatrix = dp A.! (m - 1)
-      (_, minInd) = minimumCost minMatrix (-1, -1)
-   in snd (minMatrix M.! valid minInd)
+      (nat, minInd) = minimumCost minMatrix (-1, -1)
+   in case nat of
+        Natural c -> trace ("Min Ind" ++ show minInd) (snd (minMatrix M.! valid minInd))
+        Infinite -> []
   where
     n = M.nrows costMatrix
     m = M.ncols costMatrix
@@ -91,16 +94,15 @@ minimumCost costMatrix currentIndex = fst (foldl f ((Infinite, (-1, -1)), (0, 0)
 
 -- Get tasks agents and how they will be split, and returns new tasks
 parseTaskDivision :: Board -> [Task] -> [Agent] -> [(Int, Int)] -> [Agent]
-parseTaskDivision board tasks agent = mapMaybe parse
+parseTaskDivision board tasks agent = map parse
   where
     parse (i, j)
       | isNothing aTask =
-        Just
-          Agent
-            { entity = entity dAgent,
-              task = Just AssignedTask {destinaton = target dTask, actions = path}
-            }
-      | otherwise = Nothing
+        Agent
+          { entity = entity dAgent,
+            task = Just AssignedTask {destinaton = target dTask, actions = path}
+          }
+      | otherwise = dAgent
       where
         dTask = tasks !! i
         dAgent = agent !! j

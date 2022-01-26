@@ -108,6 +108,7 @@ localApplyMove board obj action =
   case (objType, action) of
     (Robot (Just Kid), Drop actPos) -> (make (Robot Nothing) actPos, newBoard)
     (Robot Nothing, Grab actPos) -> (make (Robot (Just Kid)) actPos, newBoard)
+    (Robot Nothing, Clean actPos) -> (make (Robot Nothing) actPos, newBoard)
     (Robot c, Move actPos) -> (make (Robot c) actPos, newBoard)
     _ -> error "Local apply to unexpected action or object"
   where

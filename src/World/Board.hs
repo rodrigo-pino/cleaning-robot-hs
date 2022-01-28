@@ -47,7 +47,7 @@ move (Object Kid pos) board dir
     goto = pos + dir
     cell = board ! (pos + dir)
     objTypes = fromJust cell
-    cannotMove = not (null [t | t <- objTypes, t == Crib])
+    cannotMove = Crib `elem` fromJust (board ! pos)
 move (Object (Robot carries) pos) board dir
   | canClean = Just (Clean goto)
   | canDrop = Just (Drop goto)
@@ -77,7 +77,7 @@ applyMove obj (Grab pos) board =
   (board *-- [Object Kid pos, obj]) *+ Object (Robot (Just Kid)) pos
 applyMove obj (Move pos) board = (board *- obj) *+ update obj pos
 applyMove obj (Push pos1 pos2) board =
-  (board *- Object Obstacle pos1) *++ [update obj pos1, Object Obstacle pos2]
+  (board *-- [Object Obstacle pos1, obj]) *++ [update obj pos1, Object Obstacle pos2]
 
 canPush :: [[ObjectType]] -> Int -> Int -> (Bool, Int)
 canPush xs posi diri

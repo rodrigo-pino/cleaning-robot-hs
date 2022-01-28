@@ -75,7 +75,7 @@ instance IBoard Board where
   board *-- objs =
     let newCells = filter (`notElem` objs) (elems board)
      in if length (elems board) /= length newCells + length objs
-          then error "Element to delete does not exists"
+          then error ("Element to delete does not exists: " ++ show objs)
           else Board newCells (maxRows board) (maxCols board)
   board *- obj = board *-- [obj]
   board *+ obj = board *++ [obj]

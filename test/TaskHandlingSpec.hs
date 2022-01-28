@@ -152,7 +152,7 @@ assignTaskTest = describe "Correct assignation of tasks to agents" $ do
         board = newBoard 7 5 *++ (dirts ++ robots)
         agents = [mockAgent ent [] ent | ent <- robots]
         resultAgents = assignTasks board agents
-        resultDest = trace (show resultAgents) (map (destinaton . fromJust . task) resultAgents)
+        resultDest = map (destinaton . fromJust . task) resultAgents
      in length (resultDest `intersect` dirts) `shouldBe` length dirts
   it "Should assign tasks with a path through a narrow corridor" $
     let obstacles = makeMany Obstacle [(i, j) | i <- [1 .. 4], j <- [0, 1, 3, 4]]

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
+
 module TaskHandlingSpec where
 
 import Agent.Logic.Pathfinding hiding (make)
@@ -5,7 +7,7 @@ import Agent.Logic.TaskHandling
 import Agent.Objects
 import Data.List (intersect, sort)
 import qualified Data.Matrix as M
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, mapMaybe)
 import Debug.Trace (trace)
 import Test.Hspec
 import Test.Tasty
@@ -97,6 +99,8 @@ optimizationTest =
       getOptimum 3 `shouldBe` [(0, 0), (2, 1)]
     it "Should return the best optimum #4" $
       sort (getOptimum 4) `shouldBe` [(0, 0), (1, 1), (2, 2)]
+    it "Should return the best optimum #5" $
+      sort (getOptimum 5) `shouldBe` [(1, 1)]
   where
     getOptimum num =
       let (_, tasks, agents) = testData num
@@ -148,8 +152,17 @@ assignTaskTest = describe "Correct assignation of tasks to agents" $ do
         board = newBoard 7 5 *++ (dirts ++ robots)
         agents = [mockAgent ent [] ent | ent <- robots]
         resultAgents = assignTasks board agents
-        resultDest = map (destinaton . fromJust . task) resultAgents
+        resultDest = trace (show resultAgents) (map (destinaton . fromJust . task) resultAgents)
      in length (resultDest `intersect` dirts) `shouldBe` length dirts
+  it "Should assign tasks with a path through a narrow corridor" $
+    let obstacles = makeMany Obstacle [(i, j) | i <- [1 .. 4], j <- [0, 1, 3, 4]]
+        dirts@[dirt1, dirt2, dirt3] = makeMany Dirt [(0, j) | j <- [0, 2, 4]]
+        robots = makeMany (Robot Nothing) [(5, 2), (5, 4)] -- [(5, j) | j <- [0, 2, 4]]
+        board = newBoard 6 5 *++ (obstacles ++ dirts ++ robots)
+        agents = [Agent rob Nothing | rob <- robots]
+        resultAgents = assignTasks board agents
+        resultDest = map destinaton (mapMaybe task resultAgents)
+     in length (resultDest `intersect` dirts) `shouldBe` 1
   where
     mockAgent :: Object -> [Action Position] -> Object -> Agent
     mockAgent obj [] _ = Agent obj Nothing
@@ -192,6 +205,14 @@ testData num
         robots = makeMany (Robot Nothing) [(6, i * 2) | i <- [0 .. 2]]
         board = newBoard 7 5 *++ (dirts ++ robots)
         agents = [Agent ent Nothing | ent <- robots]
+        tasks = localHandleTasks board agents
+     in (board, tasks, agents)
+  | num == 5 =
+    let obstacles = makeMany Obstacle [(i, j) | i <- [1 .. 4], j <- [0, 1, 3, 4]]
+        dirts@[dirt1, dirt2, dirt3] = makeMany Dirt [(0, j) | j <- [0, 2, 4]]
+        robots = makeMany (Robot Nothing) [(5, j) | j <- [0, 2, 4]]
+        board = newBoard 6 5 *++ (obstacles ++ dirts ++ robots)
+        agents@[ag1, ag2, ag3] = [Agent rob Nothing | rob <- robots]
         tasks = localHandleTasks board agents
      in (board, tasks, agents)
   | otherwise = error "Invalid test data"

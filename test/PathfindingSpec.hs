@@ -55,6 +55,20 @@ taskReachabilityTest = describe "Testing agent ability to detect tasks to be don
         reachable = reachableTasks board agent
         expected = []
      in reachable `shouldBe` expected
+  it "Should reach a task from a narrow corridor" $
+    let obstacles = makeMany Obstacle [(i, j) | i <- [1 .. 4], j <- [0, 1, 3, 4]]
+        dirts@[dirt1, dirt2, dirt3] = makeMany Dirt [(0, j) | j <- [0, 2, 4]]
+        robots = makeMany (Robot Nothing) [(5, j) | j <- [0, 2, 4]]
+        board = newBoard 6 5 *++ (obstacles ++ dirts ++ robots)
+        agents@[ag1, ag2, ag3] = [Agent rob Nothing | rob <- robots]
+     in do
+          reachableTasks board ag1 `shouldBe` []
+          reachableTasks board ag2
+            `shouldBe` [ (dirt2, Natural 6),
+                         (dirt3, Natural 8),
+                         (dirt1, Natural 8)
+                       ]
+          reachableTasks board ag3 `shouldBe` []
   where
     baseBoard = newBoard 5 5
 
@@ -95,6 +109,18 @@ taskDetectionTest =
             `shouldBe` [ objToTask (zipWith (curry agnToSolver) agents [5, 5]) crib,
                          objToTask (zipWith (curry agnToSolver) agents [5, 8]) (head dirt),
                          objToTask (zipWith (curry agnToSolver) agents [8, 5]) (dirt !! 1)
+                       ]
+    it "All tasks should have just one solver" $
+      let obstacles = makeMany Obstacle [(i, j) | i <- [1 .. 4], j <- [0, 1, 3, 4]]
+          dirts@[dirt1, dirt2, dirt3] = makeMany Dirt [(0, j) | j <- [0, 2, 4]]
+          robots = makeMany (Robot Nothing) [(5, j) | j <- [0, 2, 4]]
+          board = newBoard 6 5 *++ (obstacles ++ dirts ++ robots)
+          agents@[ag1, ag2, ag3] = [Agent rob Nothing | rob <- robots]
+          tasks = map (objToTask []) dirts
+       in findSolvers board tasks agents
+            `shouldBe` [ objToTask (zipWith (curry agnToSolver) [ag2] [8]) dirt1,
+                         objToTask (zipWith (curry agnToSolver) [ag2] [6]) dirt2,
+                         objToTask (zipWith (curry agnToSolver) [ag2] [8]) dirt3
                        ]
   where
     objToTask slv obj = Task obj slv

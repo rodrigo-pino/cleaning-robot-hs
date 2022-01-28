@@ -15,32 +15,32 @@ agentInit board = [Agent robot Nothing | robot <- robots]
 agentSim :: Board -> [Agent] -> (Board, [Agent])
 agentSim originalBoard allAgents = (board2, movedAgents1 ++ movedAgents2)
   where
-    (board1, agents1) = moveAgents allAgents originalBoard allAgents
-    (board2, movedAgents2) = moveAgents allAgents board1 notMovedAgents
+    (board1, agents1) = moveAgents originalBoard [] allAgents
+    (board2, movedAgents2) = moveAgents board1 movedAgents1 notMovedAgents
 
     (notMovedAgents, movedAgents1) = foldl f ([], []) (zip agents1 assignedAgents)
     f (notM, m) (a1, a2) = if isNothing (task a1) then (a2 : notM, m) else (notM, a2 : m)
 
     assignedAgents = assignTasks board1 agents1
 
-moveAgents :: [Agent] -> Board -> [Agent] -> (Board, [Agent])
-moveAgents _ board [] = (board, [])
-moveAgents allAgents board (ag : agents) =
+moveAgents :: Board -> [Agent] -> [Agent] -> (Board, [Agent])
+moveAgents board _ [] = (board, [])
+moveAgents board movedAgents (ag : agents) =
   if isNothing (task ag)
     then
-      let (rBoard, rAgents) = moveAgents allAgents board agents
+      let (rBoard, rAgents) = moveAgents board (ag : movedAgents) agents
        in (rBoard, ag : rAgents)
     else
-      let (rBoard, rAgents) = moveAgents allAgents updBoard agents
+      let (rBoard, rAgents) = moveAgents updBoard (updAgent : movedAgents) agents
        in (rBoard, updAgent : rAgents)
   where
     (updBoard, updAgent) =
       if null actions
         then (board, unassingAgent ag)
-        else agentApplyMove board ag act -- remove missionless agents
+        else agentApplyMove board ag act
     actions =
       let path = pathToTask board ag objective
-          agentlessBoard = removeActiveAgents board allAgents
+          agentlessBoard = removeActiveAgents board ag (movedAgents ++ agents)
        in if null path
             then pathToTask agentlessBoard ag objective
             else path
@@ -52,7 +52,15 @@ agentApplyMove board agent action
   | robotBlock = (board, agent)
   | otherwise =
     let (updObj, updBoard) = localApplyMove board (entity agent) action
-     in (updBoard, Agent updObj (task agent))
+        updTask = case (action, (position . fromJust . getTask) agent) of
+          (Clean x, y)
+            | x == y -> Nothing
+            | otherwise -> task agent
+          (Drop x, y)
+            | x == y -> Nothing
+            | otherwise -> task agent
+          _ -> task agent
+     in (updBoard, Agent updObj updTask)
   where
     objs = fromJust (board ! value action)
     robotBlock =
@@ -61,10 +69,9 @@ agentApplyMove board agent action
                || Robot (Just Kid) `elem` objs
            )
 
-removeActiveAgents :: Board -> [Agent] -> Board
-removeActiveAgents board agents = board *-- remove
+removeActiveAgents :: Board -> Agent -> [Agent] -> Board
+removeActiveAgents board ag agents = board *-- remove
   where
-    robots = getByTypes board [Robot Nothing, Robot (Just Kid)]
-    remove = foldl f [] robots
-    f acc val = if hasMission val then acc else val : acc
-    hasMission robot = any (\a -> entity a == robot && (isJust . task) a) agents
+    -- get all robots for possible removoal, except the one of the agent in question
+    remove = foldl f [] (filter (/= ag) agents)
+    f acc val = if (isJust . task) val then entity val : acc else acc

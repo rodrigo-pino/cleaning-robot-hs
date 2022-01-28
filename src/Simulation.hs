@@ -17,18 +17,21 @@ runSimulation simSelect duration shuffleTime =
         simulation selectedBoard initalAgents duration shuffleTime g
 
 simulation :: Board -> [Agent] -> Int -> Int -> StdGen -> IO ()
-simulation board _ _ 0 _ = printState board
+simulation board _ 0 _ _ = simOutput board 0
 simulation board agents times shuffleT g =
   let (boardByAgents, updatedAgents) = agentSim board agents
       (boardByWorld, newG) = worldSim boardByAgents g False
    in do
-        print ("Time: " ++ show times)
-        print "Agent move:"
-        printState boardByAgents
-        print "World move:"
-        printState boardByWorld
-        print ""
+        simOutput boardByWorld times
         simulation boardByWorld updatedAgents (times - 1) shuffleT newG
+
+simOutput board times = do
+  print ("Time: " ++ show times)
+  -- print "Agent move:"
+  -- printState boardByAgents
+  print "World move:"
+  printState board
+  print ""
 
 boardSelect :: Int -> Board
 boardSelect num =

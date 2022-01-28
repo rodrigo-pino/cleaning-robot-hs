@@ -29,7 +29,7 @@ library
       Agent.Logic.TaskHandling
       Agent.Objects
       Agent.Simulate
-      Lib
+      Simulation
       Visual
       World.Board
       World.Objects

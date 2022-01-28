@@ -13,39 +13,46 @@ agentInit board = [Agent robot Nothing | robot <- robots]
     robots = [obj | obj <- elems board, typex obj `elem` [Robot Nothing, Robot (Just Kid)]]
 
 agentSim :: Board -> [Agent] -> (Board, [Agent])
-agentSim originalBoard allAgents = (board2, movedAgents1 ++ movedAgents2)
+agentSim board = loop board []
   where
-    (board1, agents1) = moveAgents originalBoard [] allAgents
-    (board2, movedAgents2) = moveAgents board1 movedAgents1 notMovedAgents
+    loop board movedAgents [] = (board, movedAgents)
+    loop board movedAgents notMovedAgents =
+      let notMovedAssignedAgents =
+            filter
+              (`elem` notMovedAgents)
+              (assignTasks board (movedAgents ++ notMovedAgents))
+          ( updBoard,
+            updMovedAgents,
+            updNotMovedAgents
+            ) = moveAgents board movedAgents notMovedAssignedAgents
+          [l1, l2] = map length [notMovedAgents, updNotMovedAgents]
+       in if trace ("(l1, l2)" ++ show (l1, l2)) l1 == l2
+            then (updBoard, movedAgents ++ updMovedAgents ++ updNotMovedAgents)
+            else loop updBoard (movedAgents ++ updMovedAgents) updNotMovedAgents
 
-    (notMovedAgents, movedAgents1) = foldl f ([], []) (zip agents1 assignedAgents)
-    f (notM, m) (a1, a2) = if isNothing (task a1) then (a2 : notM, m) else (notM, a2 : m)
-
-    assignedAgents = assignTasks board1 agents1
-
-moveAgents :: Board -> [Agent] -> [Agent] -> (Board, [Agent])
-moveAgents board _ [] = (board, [])
+moveAgents :: Board -> [Agent] -> [Agent] -> (Board, [Agent], [Agent])
+moveAgents board _ [] = (board, [], [])
 moveAgents board movedAgents (ag : agents) =
-  if isNothing (task ag)
+  if isNothing (task ag) || null actions
     then
-      let (rBoard, rAgents) = moveAgents board (ag : movedAgents) agents
-       in (rBoard, ag : rAgents)
+      let unAg = unassingAgent ag
+          (rBoard, rmovedAgents, rnotMovedAgents) =
+            moveAgents board (unAg : movedAgents) agents
+       in trace (show ag ++ " cannot move") (rBoard, rmovedAgents, unAg : rnotMovedAgents)
     else
-      let (rBoard, rAgents) = moveAgents updBoard (updAgent : movedAgents) agents
-       in (rBoard, updAgent : rAgents)
+      let (rBoard, rmovedAgents, rnotMovedAgents) =
+            moveAgents updBoard (updAgent : movedAgents) agents
+       in trace (show ag ++ " can move") (rBoard, updAgent : rmovedAgents, rnotMovedAgents)
   where
-    (updBoard, updAgent) =
-      if null actions
-        then (board, unassingAgent ag)
-        else agentApplyMove board ag act
+    (updBoard, updAgent) = agentApplyMove board ag act
+    act = head actions
     actions =
       let path = pathToTask board ag objective
           agentlessBoard = removeActiveAgents board ag (movedAgents ++ agents)
        in if null path
-            then pathToTask agentlessBoard ag objective
-            else path
+            then trace "sndPath" (pathToTask agentlessBoard ag objective)
+            else trace "fstPath" path
     objective = fromJust (getTask ag)
-    act = head actions
 
 agentApplyMove :: Board -> Agent -> Action Position -> (Board, Agent)
 agentApplyMove board agent action
@@ -70,7 +77,7 @@ agentApplyMove board agent action
            )
 
 removeActiveAgents :: Board -> Agent -> [Agent] -> Board
-removeActiveAgents board ag agents = board *-- remove
+removeActiveAgents board ag agents = trace ("Removing: " ++ show remove) (board *-- remove)
   where
     -- get all robots for possible removoal, except the one of the agent in question
     remove = foldl f [] (filter (/= ag) agents)

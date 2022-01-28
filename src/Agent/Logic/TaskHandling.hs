@@ -4,7 +4,7 @@ import Agent.Logic.Pathfinding
 import Agent.Objects
 import Data.List (elemIndex)
 import qualified Data.Matrix as M
-import Data.Maybe (catMaybes, fromJust, isJust, isNothing, mapMaybe)
+import Data.Maybe (catMaybes, fromJust, fromMaybe, isJust, isNothing, mapMaybe)
 import Debug.Trace (trace)
 import qualified GHC.Arr as A
 import World.Objects
@@ -42,18 +42,21 @@ getOptimalTaskDivison board tasks agents
 
 -- returns list of tuples (i, j) which means task i will be done by agent j
 optimize :: M.Matrix (Natural, [(Int, Int)]) -> [(Int, Int)]
-optimize costMatrix =
-  let minMatrix = dp A.! (m - 1)
-      (nat, minInd) = minimumCost minMatrix (-1, -1)
-   in case nat of
-        Natural c -> snd (minMatrix M.! valid minInd)
-        Infinite -> []
+optimize costMatrix = fromMaybe [] (foldr extract Nothing dp)
   where
-    n = M.nrows costMatrix
-    m = M.ncols costMatrix
-    valid (i, j) = (i + 1, j + 1)
+    -- Scans all the matrices produced for the best agent combination
+    -- It tries using all, then all - 1, all - 2, etc ...
+    -- This is done for when only a subset of the agents can be used
+    extract val acc
+      | isNothing acc =
+        let (nat, minInd) = minimumCost val (-1, -1)
+         in case nat of
+              Natural _ -> Just (snd (val M.! valid minInd))
+              Infinite -> Nothing
+      | otherwise = acc
 
-    dp = A.listArray (0, m) [f k | k <- [0 .. m - 1]]
+    -- Dynamic programming logic
+    dp = [f k | k <- [0 .. m - 1]]
     f :: Int -> M.Matrix (Natural, [(Int, Int)])
     f 0 = costMatrix
     f k =
@@ -61,14 +64,18 @@ optimize costMatrix =
         n
         m
         [ (costij + mc, (i, j) : tail)
-          | i <- [0 .. n - 1],
+          | let prevMatrix = dp !! (k - 1),
+            i <- [0 .. n - 1],
             j <- [0 .. m - 1],
             let (mc, agent) = minimumCost prevMatrix (i, j),
             let costij = fst (costMatrix M.! valid (i, j)),
             let tail = snd (prevMatrix M.! valid agent)
         ]
-      where
-        prevMatrix = dp A.! (k - 1)
+
+    -- Helpers!!!
+    n = M.nrows costMatrix
+    m = M.ncols costMatrix
+    valid (i, j) = (i + 1, j + 1)
 
 minimumCost :: M.Matrix (Natural, [(Int, Int)]) -> (Int, Int) -> (Natural, (Int, Int))
 minimumCost costMatrix currentIndex = fst (foldl f ((Infinite, (-1, -1)), (0, 0)) costMatrix)
@@ -94,20 +101,31 @@ minimumCost costMatrix currentIndex = fst (foldl f ((Infinite, (-1, -1)), (0, 0)
 
 -- Get tasks agents and how they will be split, and returns new tasks
 parseTaskDivision :: Board -> [Task] -> [Agent] -> [(Int, Int)] -> [Agent]
-parseTaskDivision board tasks agent = map parse
+parseTaskDivision board tasks agents assignation =
+  zipWith (curry assign) [0 .. length agents - 1] agents
   where
-    parse (i, j)
-      | isNothing aTask =
+    assign (i, agent)
+      | isJust assignedTask || taskIndex == -1 = agent
+      | otherwise =
         Agent
-          { entity = entity dAgent,
-            task = Just AssignedTask {destinaton = target dTask, actions = path}
+          { entity = entity agent,
+            task =
+              Just
+                AssignedTask
+                  { destinaton = target designatedTask,
+                    actions = path
+                  }
           }
-      | otherwise = dAgent
       where
-        dTask = tasks !! i
-        dAgent = agent !! j
-        aTask = task dAgent
-        path = pathToTask board dAgent (target dTask)
+        assignedTask = task agent
+        taskIndex = searchTask i assignation
+        designatedTask = tasks !! taskIndex
+        path = pathToTask board agent (target designatedTask)
+
+    searchTask i [] = -1
+    searchTask i (x : xs)
+      | snd x == i = fst x
+      | otherwise = searchTask i xs
 
 getCostMatrix :: [Task] -> [Agent] -> M.Matrix (Natural, [(Int, Int)])
 getCostMatrix tasks agents =

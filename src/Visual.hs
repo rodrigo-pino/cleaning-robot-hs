@@ -41,9 +41,10 @@ drawChar objTypes =
     [Crib, Robot (Just Kid)] -> 'G'
     [Dirt] -> 'd'
     [Dirt, Robot Nothing] -> 'D'
+    [Dirt, Robot (Just Kid)] -> 'D'
     [Kid] -> 'k'
     [Kid, Robot Nothing] -> 'K'
     [Obstacle] -> 'o'
     [Robot Nothing] -> 'r'
     [Robot (Just Kid)] -> 'R'
-    _ -> error "Invalid combination"
+    _ -> error ("Invalid combination: " ++ show objTypes)

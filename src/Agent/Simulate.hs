@@ -26,7 +26,7 @@ agentSim board = loop board []
             updNotMovedAgents
             ) = moveAgents board movedAgents notMovedAssignedAgents
           [l1, l2] = map length [notMovedAgents, updNotMovedAgents]
-       in if trace ("(l1, l2)" ++ show (l1, l2)) l1 == l2
+       in if l1 == l2
             then (updBoard, movedAgents ++ updMovedAgents ++ updNotMovedAgents)
             else loop updBoard (movedAgents ++ updMovedAgents) updNotMovedAgents
 
@@ -38,11 +38,11 @@ moveAgents board movedAgents (ag : agents) =
       let unAg = unassingAgent ag
           (rBoard, rmovedAgents, rnotMovedAgents) =
             moveAgents board (unAg : movedAgents) agents
-       in trace (show ag ++ " cannot move") (rBoard, rmovedAgents, unAg : rnotMovedAgents)
+       in (rBoard, rmovedAgents, unAg : rnotMovedAgents)
     else
       let (rBoard, rmovedAgents, rnotMovedAgents) =
             moveAgents updBoard (updAgent : movedAgents) agents
-       in trace (show ag ++ " can move") (rBoard, updAgent : rmovedAgents, rnotMovedAgents)
+       in (rBoard, updAgent : rmovedAgents, rnotMovedAgents)
   where
     (updBoard, updAgent) = agentApplyMove board ag act
     act = head actions
@@ -50,8 +50,8 @@ moveAgents board movedAgents (ag : agents) =
       let path = pathToTask board ag objective
           agentlessBoard = removeActiveAgents board ag (movedAgents ++ agents)
        in if null path
-            then trace "sndPath" (pathToTask agentlessBoard ag objective)
-            else trace "fstPath" path
+            then pathToTask agentlessBoard ag objective
+            else path
     objective = fromJust (getTask ag)
 
 agentApplyMove :: Board -> Agent -> Action Position -> (Board, Agent)

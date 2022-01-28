@@ -11,12 +11,14 @@ import World.Board
 import World.Objects
   ( Action (..),
     Board,
-    Object,
+    Object (..),
     ObjectType (..),
     Position,
     position,
     typex,
     value,
+    (*+),
+    (*--),
   )
 import qualified World.Objects as WO
 
@@ -55,10 +57,16 @@ reachableTasks :: Board -> Agent -> [ReachedTask]
 reachableTasks board agentx = searchAll initialQueue []
   where
     maybeAssignedTask = task agentx
-    (obj, time) = case maybeAssignedTask of
-      Nothing -> (entity agentx, 1)
-      Just assignedTask -> (destinaton assignedTask, length (actions assignedTask) + 1)
-    initialQueue = Seq.fromList [(obj, mov, board, Natural time) | mov <- moves obj board]
+    (obj, time, modBoard) = case maybeAssignedTask of
+      Nothing -> (entity agentx, 1, board)
+      Just assignedTask ->
+        let newPos = (position . destinaton) assignedTask
+            newTime = length (actions assignedTask) + 1
+            oldObj = entity agentx
+            newObj = Object (Robot Nothing) newPos
+            newBoard = (board *-- [destinaton assignedTask, oldObj]) *+ newObj
+         in (newObj, newTime, newBoard)
+    initialQueue = Seq.fromList [(obj, mov, modBoard, Natural time) | mov <- moves obj modBoard]
 
 searchAll :: SeqAct -> SetAct -> [ReachedTask]
 searchAll Empty _ = []

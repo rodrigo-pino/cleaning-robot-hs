@@ -40,7 +40,7 @@ findSolvers _ tasks [] =
   ]
 findSolvers board tasks (ag : agents) = findSolvers board updatedTasks agents
   where
-    foundTasks = reachableTasks board ag
+    foundTasks = reachableTasks (robotlessBoard board ag) ag
     updatedTasks =
       [ newTask
         | taskx <- tasks,
@@ -124,3 +124,9 @@ localApplyMove board obj action =
     newBoard = applyMove obj action board
 
 make obj pos = WO.make obj (WO.tupleFromPosition pos)
+
+robotlessBoard board ag =
+  let newElems = filter f (WO.elems board)
+      f obj@(Object (Robot _) pos) = obj == entity ag
+      f _ = True
+   in WO.Board newElems (WO.maxRows board) (WO.maxCols board)

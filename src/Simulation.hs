@@ -67,4 +67,24 @@ boardSelect num =
       let board1 = boardSelect 1
           dirts = makeMany Dirt [(6, j) | j <- [0 .. 11]]
        in board1 *++ dirts
+    3 ->
+      let robots = makeMany (Robot Nothing) [(i, 0) | i <- [12 .. 15]]
+          kids = makeMany Kid [(i, j) | i <- [4 .. 12], let j = 16 + i]
+          cribs = makeMany Crib [((i * 2) + 1, 31) | i <- [0 .. 7]]
+          obstacles =
+            makeMany
+              Obstacle
+              ([(i, 1) | i <- [1 .. 15]] ++ [(i, 3) | i <- [0 .. 12]])
+       in worldInit 16 32 (robots ++ kids ++ cribs ++ obstacles)
+    4 ->
+      let board3 = boardSelect 3
+          dirts =
+            makeMany
+              Dirt
+              ( (0, 1) :
+                [(i, 0) | i <- [0 .. 11]]
+                  ++ [(i, 2) | i <- [0 .. 15]]
+                  ++ [(i, 3) | i <- [13 .. 15]]
+              )
+       in board3 *++ dirts
     _ -> error ("No board defined for num " ++ show num)

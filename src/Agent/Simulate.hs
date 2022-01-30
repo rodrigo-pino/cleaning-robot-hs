@@ -77,7 +77,7 @@ agentApplyMove board agent action
            )
 
 removeActiveAgents :: Board -> Agent -> [Agent] -> Board
-removeActiveAgents board ag agents = trace ("Removing: " ++ show remove) (board *-- remove)
+removeActiveAgents board ag agents = board *-- remove
   where
     -- get all robots for possible removoal, except the one of the agent in question
     remove = foldl f [] (filter (/= ag) agents)

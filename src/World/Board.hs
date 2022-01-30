@@ -60,14 +60,14 @@ move (Object (Robot carries) pos) board dir
     cell = board ! (pos + dir)
     objTypes = fromJust cell
     canClean =
-      (dir == Position 0 0)
-        && (fromJust (board ! pos) == [Dirt, Robot Nothing])
+      dir == Position 0 0
+        && fromJust (board ! pos) == [Dirt, Robot Nothing]
     canDrop =
-      (dir == Position 0 0)
-        && (fromJust (board ! pos) `elem` [[Robot (Just Kid)], [Crib, Robot (Just Kid)]])
+      dir == Position 0 0
+        && fromJust (board ! pos) `elem` [[Robot (Just Kid)], [Crib, Robot (Just Kid)]]
     canGrab =
       objTypes == [Kid]
-        && (dir /= Position 0 0)
+        && dir /= Position 0 0
         && isNothing carries
 
 applyMove :: Object -> Action Position -> Board -> Board
@@ -99,3 +99,9 @@ getKidCluster board = clusters
     addCluster acc kid =
       let kidsAround = length (filter ([Kid] ==) (adyacentsTo board (position kid)))
        in Map.insert kid kidsAround acc
+
+calculateDirtiness :: Board -> Float
+calculateDirtiness board =
+  let totalDirts = length (getByType board Dirt)
+      totalBlocks = maxRows board * maxCols board
+   in (fromIntegral totalDirts / fromIntegral totalBlocks) * 100

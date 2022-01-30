@@ -147,7 +147,7 @@ agentSimTest = describe "Agents should do all tasks" $ do
         (resultBoard3, resultAgent3) = loop 5 (resultBoard2, resultAgent2)
      in do
           getByType resultBoard1 Dirt `shouldBe` [dirt1, dirt3]
-          getByType resultBoard2 Dirt `shouldBe` [dirt3]
+          getByType resultBoard2 Dirt `shouldBe` [dirt1]
           getByType resultBoard3 Dirt `shouldBe` []
   it "Should move the agents to do the tasks #4" $
     let obstacles = makeMany Obstacle [(i, j) | i <- [1, 2, 3], j <- [0, 1, 3, 4]]
@@ -159,15 +159,20 @@ agentSimTest = describe "Agents should do all tasks" $ do
         (resultBoard2, resultAgent2) = loop 3 (resultBoard1, resultAgent1)
         (resultBoard3, resultAgent3) = loop 2 (resultBoard2, resultAgent2)
      in do
-          printState resultBoard1
-          print resultAgent1
-          printState resultBoard2
-          print resultAgent2
-          printState resultBoard3
-          print resultAgent3
           getByType resultBoard1 Dirt `shouldBe` [dirt1, dirt3]
           getByType resultBoard2 Dirt `shouldBe` [dirt1]
           getByType resultBoard3 Dirt `shouldBe` []
+  it "Should move the agents to the tasks #5" $
+    let robots = makeMany (Robot Nothing) [(0, i) | i <- [0 .. 3]]
+        dirts = makeMany Dirt [(0, i) | i <- [4 .. 7]]
+        board = newBoard 1 8 *++ (robots ++ dirts)
+        agents = agentInit board
+        (resultBoard1, resultAgent1) = loop 4 (board, agents)
+        (resultBoard2, resultAgent2) = loop 1 (resultBoard1, resultAgent1)
+        (resultBoard3, resultAgent3) = loop 2 (resultBoard2, resultAgent2)
+     in do
+          getByType resultBoard1 Dirt `shouldBe` dirts
+          getByType resultBoard2 Dirt `shouldBe` []
   where
     loop 0 r = r
     loop num (board, agents) = loop (num - 1) (agentSim board agents)

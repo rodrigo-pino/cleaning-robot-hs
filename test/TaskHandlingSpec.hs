@@ -53,6 +53,15 @@ taskToMatrixTest =
               [5, -1, 5, -1, -1, 5]
               [(i, j) | i <- [0 .. 2], j <- [0 .. 1]]
        in getCostMatrix tasks agents `shouldBe` expected
+    it "Should produce the correct matrix #6" $
+      let (_, tasks, agents) = testData 6
+          expected =
+            mockInitialMatrix
+              4
+              4
+              (concat [[i - j | j <- [0 .. 3]] | i <- [5 .. 8]])
+              [(i, j) | i <- [0 .. 3], j <- [0 .. 3]]
+       in getCostMatrix tasks agents `shouldBe` expected
   where
     mockInitialMatrix :: Int -> Int -> [Int] -> [(Int, Int)] -> M.Matrix (Natural, [(Int, Int)])
     mockInitialMatrix r c vals inds = M.fromList r c (zip (naturals vals) (map (: []) inds))
@@ -100,7 +109,7 @@ optimizationTest =
     it "Should return the best optimum #4" $
       sort (getOptimum 4) `shouldBe` [(0, 0), (1, 1), (2, 2)]
     it "Should return the best optimum #5" $
-      sort (getOptimum 5) `shouldBe` [(1, 1)]
+      sort (getOptimum 5) `shouldBe` [(i, i) | i <- [0 .. 2]]
   where
     getOptimum num =
       let (_, tasks, agents) = testData num
@@ -157,12 +166,14 @@ assignTaskTest = describe "Correct assignation of tasks to agents" $ do
   it "Should assign tasks with a path through a narrow corridor" $
     let obstacles = makeMany Obstacle [(i, j) | i <- [1 .. 4], j <- [0, 1, 3, 4]]
         dirts@[dirt1, dirt2, dirt3] = makeMany Dirt [(0, j) | j <- [0, 2, 4]]
-        robots = makeMany (Robot Nothing) [(5, 2), (5, 4)] -- [(5, j) | j <- [0, 2, 4]]
+        robots = makeMany (Robot Nothing) [(5, 0), (5, 2), (5, 4)] -- [(5, j) | j <- [0, 2, 4]]
         board = newBoard 6 5 *++ (obstacles ++ dirts ++ robots)
         agents = [Agent rob Nothing | rob <- robots]
         resultAgents = assignTasks board agents
         resultDest = map destinaton (mapMaybe task resultAgents)
-     in length (resultDest `intersect` dirts) `shouldBe` 1
+     in do
+          print resultAgents
+          length (resultDest `intersect` dirts) `shouldBe` 3
   where
     mockAgent :: Object -> [Action Position] -> Object -> Agent
     mockAgent obj [] _ = Agent obj Nothing
@@ -213,6 +224,13 @@ testData num
         robots = makeMany (Robot Nothing) [(5, j) | j <- [0, 2, 4]]
         board = newBoard 6 5 *++ (obstacles ++ dirts ++ robots)
         agents@[ag1, ag2, ag3] = [Agent rob Nothing | rob <- robots]
+        tasks = localHandleTasks board agents
+     in (board, tasks, agents)
+  | num == 6 =
+    let robots = makeMany (Robot Nothing) [(0, i) | i <- [0 .. 3]]
+        dirts = makeMany Dirt [(0, i) | i <- [4 .. 7]]
+        board = newBoard 1 8 *++ (robots ++ dirts)
+        agents = [Agent rob Nothing | rob <- robots]
         tasks = localHandleTasks board agents
      in (board, tasks, agents)
   | otherwise = error "Invalid test data"

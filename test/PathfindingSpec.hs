@@ -110,7 +110,7 @@ taskDetectionTest =
                          objToTask (zipWith (curry agnToSolver) agents [5, 8]) (head dirt),
                          objToTask (zipWith (curry agnToSolver) agents [8, 5]) (dirt !! 1)
                        ]
-    it "All tasks should have just one solver" $
+    it "All agents should find all tasks despite being blocked by other robots" $
       let obstacles = makeMany Obstacle [(i, j) | i <- [1 .. 4], j <- [0, 1, 3, 4]]
           dirts@[dirt1, dirt2, dirt3] = makeMany Dirt [(0, j) | j <- [0, 2, 4]]
           robots = makeMany (Robot Nothing) [(5, j) | j <- [0, 2, 4]]
@@ -118,9 +118,21 @@ taskDetectionTest =
           agents@[ag1, ag2, ag3] = [Agent rob Nothing | rob <- robots]
           tasks = map (objToTask []) dirts
        in findSolvers board tasks agents
-            `shouldBe` [ objToTask (zipWith (curry agnToSolver) [ag2] [8]) dirt1,
-                         objToTask (zipWith (curry agnToSolver) [ag2] [6]) dirt2,
-                         objToTask (zipWith (curry agnToSolver) [ag2] [8]) dirt3
+            `shouldBe` [ objToTask (zipWith (curry agnToSolver) agents [10, 8, 10]) dirt1,
+                         objToTask (zipWith (curry agnToSolver) agents [8, 6, 8]) dirt2,
+                         objToTask (zipWith (curry agnToSolver) agents [10, 8, 10]) dirt3
+                       ]
+    it "All agents in a line should find all tasks despite this" $
+      let robots = makeMany (Robot Nothing) [(0, i) | i <- [0 .. 3]]
+          dirts@[d1, d2, d3, d4] = makeMany Dirt [(0, i) | i <- [4 .. 7]]
+          board = newBoard 1 8 *++ (robots ++ dirts)
+          agents = [Agent rob Nothing | rob <- robots]
+          tasks = map (objToTask []) dirts
+       in findSolvers board tasks agents
+            `shouldBe` [ objToTask (zipWith (curry agnToSolver) agents [5, 4, 3, 2]) d1,
+                         objToTask (zipWith (curry agnToSolver) agents [6, 5, 4, 3]) d2,
+                         objToTask (zipWith (curry agnToSolver) agents [7, 6, 5, 4]) d3,
+                         objToTask (zipWith (curry agnToSolver) agents [8, 7, 6, 5]) d4
                        ]
   where
     objToTask slv obj = Task obj slv

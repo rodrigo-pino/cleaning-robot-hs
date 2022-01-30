@@ -29,7 +29,7 @@ simOutput board times = do
   print ("Time: " ++ show times)
   -- print "Agent move:"
   -- printState boardByAgents
-  print "World move:"
+  print ("Dirtiness: " ++ show (calculateDirtiness board) ++ "%")
   printState board
   print ""
 
@@ -52,6 +52,19 @@ boardSelect num =
           cribs = makeMany Crib [(0, 0), (0, 4)]
           objects = robot : (kids ++ obstacles ++ cribs)
        in worldInit 5 5 objects
-    1 -> worldInit 10 10 []
-    2 -> worldInit 10 10 []
+    1 ->
+      let robots = makeMany (Robot Nothing) [(11, 0), (11, 11)]
+          kids = makeMany Kid ([(11, j) | j <- [4 .. 7]] ++ [(0, 5), (0, 6)])
+          cribs = makeMany Crib ([(i, j) | i <- [0, 1], j <- [0, 11]] ++ [(0, 2), (0, 9)])
+          obstacles =
+            makeMany
+              Obstacle
+              ( [(i, j) | i <- [4, 8], j <- [0, 1, 10, 11]]
+                  ++ [(i, j) | i <- [0 .. 4] ++ [8 .. 11], j <- [3, 8]]
+              )
+       in worldInit 12 12 (robots ++ kids ++ cribs ++ obstacles)
+    2 ->
+      let board1 = boardSelect 1
+          dirts = makeMany Dirt [(6, j) | j <- [0 .. 11]]
+       in board1 *++ dirts
     _ -> error ("No board defined for num " ++ show num)

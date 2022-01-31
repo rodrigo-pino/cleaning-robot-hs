@@ -29,6 +29,10 @@ type ReachedTask = (Object, Natural)
 
 type SeqAct = Seq (Object, Action Position, Board, Natural)
 
+type SeqActMem = Seq (Object, Action Position, Board, [Action Position], Natural)
+
+type PossiblePaths = [([Action Position], Natural)]
+
 reachableTasks :: Board -> Agent -> [ReachedTask]
 reachableTasks board agentx =
   let allActions = searchAll initialQueue Map.empty
@@ -66,6 +70,59 @@ searchAll ((obj, act, board, cost) :<| queue) hashmap
     newHashmap = Map.insert key newCost hashmap
     nextMoves = moves newObj newBoard
     newQueue = foldl (\acc val -> acc :|> (newObj, val, newBoard, newCost)) queue nextMoves
+
+    -- Helpers
+    maybeOldCost = Map.lookup (act, objType) hashmap
+    key = (act, objType)
+    objType = typex obj
+
+pathToTask :: Board -> Agent -> Object -> [Action Position]
+pathToTask board agentx targetx =
+  let obj = entity agentx
+      initialQueue =
+        Seq.fromList
+          [(obj, mov, board, [], actionCalc board 0 mov) | mov <- moves obj board]
+      paths = pathfind targetx initialQueue Map.empty
+
+      (bestPath, _) = foldl takeMin ([], Infinite) paths
+   in reverse bestPath
+  where
+    takeMin acc@(_, accCost) val@(_, valCost) =
+      if valCost < accCost then val else acc
+
+pathfind :: Object -> SeqActMem -> HashPath -> PossiblePaths
+pathfind _ Seq.Empty _ = []
+pathfind targetx ((obj, act, board, path, cost) :<| queue) hashmap
+  | value act == position targetx =
+    case act of
+      (Clean pos) -> (act : path, cost) : keepFinding True
+      (Drop pos) ->
+        if fromJust (board WO.! pos) == [Crib]
+          then (act : path, newCost) : keepFinding True
+          else keepFinding False
+      _ -> keepFinding False
+  | otherwise = keepFinding False
+  where
+    -- Logic
+    keepFinding completedTask
+      | completedTask = pathfind targetx queue newHashmap
+      | isJust maybeOldCost =
+        let oldCost = fromJust maybeOldCost
+         in if cost < oldCost
+              then pathfind targetx newQueue newHashmap
+              else pathfind targetx queue hashmap
+      | otherwise = pathfind targetx newQueue newHashmap
+
+    -- Updating vars
+    (newObj, newBoard) = localApplyMove board obj act
+    newCost = actionCalc board cost act
+    newHashmap = Map.insert key newCost hashmap
+    nextMoves = moves newObj newBoard
+    newQueue =
+      foldl
+        (\acc val -> acc :|> (newObj, val, newBoard, act : path, newCost))
+        queue
+        nextMoves
 
     -- Helpers
     maybeOldCost = Map.lookup (act, objType) hashmap

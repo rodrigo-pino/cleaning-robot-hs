@@ -2,6 +2,7 @@
 
 module World.Objects where
 
+import Data.Hashable
 import Data.List (nub, sort)
 import Data.Maybe
 import Debug.Trace (trace)
@@ -22,8 +23,14 @@ data Board = Board {elems :: [Object], maxRows :: Int, maxCols :: Int}
 
 data Action a = Clean a | Drop a | Grab a | Move a | Push a a deriving (Eq, Show)
 
+instance Hashable ObjectType where
+  hashWithSalt salt objType = (hash . show) objType
+
 instance (Ord a) => Ord (Action a) where
   a1 <= a2 = value a1 <= value a2
+
+instance (Hashable a) => Hashable (Action a) where
+  hashWithSalt salt action = (hash . value) action
 
 instance Num Position where
   (Position x1 y1) + (Position x2 y2) = Position (x1 + x2) (y1 + y2)
@@ -36,6 +43,9 @@ instance Eq Position where
 
 instance Ord Position where
   (Position x1 y1) <= (Position x2 y2) = x1 <= x2 && y1 <= y2
+
+instance Hashable Position where
+  hashWithSalt salt (Position a b) = hash (a, b)
 
 instance Eq Object where
   obj1 == obj2 = typex obj1 == typex obj2 && position obj1 == position obj2

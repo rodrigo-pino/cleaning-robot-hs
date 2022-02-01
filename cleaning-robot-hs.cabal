@@ -75,6 +75,7 @@ test-suite cleaning-robot-hs-test
   main-is: Spec.hs
   other-modules:
       AgentSimulateSpec
+      PathCalculationSpec
       PathfindingSpec
       TaskHandlingSpec
       VisualSpec

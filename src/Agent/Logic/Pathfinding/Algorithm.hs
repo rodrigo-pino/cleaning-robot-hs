@@ -8,7 +8,6 @@ import qualified Data.HashPSQ as PSQ
 import Data.Maybe (fromJust, isJust)
 import Data.Sequence (Seq (..))
 import qualified Data.Sequence as Seq
-import Debug.Trace (trace)
 import World.Board
 import World.Objects
   ( Action (..),
@@ -36,7 +35,7 @@ type PossiblePaths = [([Action Position], Natural)]
 
 reachableTasks :: Board -> Agent -> PathCalcType -> [ReachedTask]
 reachableTasks board agentx calcType =
-  let allActions = trace "doing searchalll" searchAll calcType initialQueue Map.empty
+  let allActions = searchAll calcType initialQueue Map.empty
    in actionToTasks board allActions
   where
     -- queue has initial moves at first
@@ -85,16 +84,16 @@ pathToTask board agentx targetx calcType =
       initialQueue =
         Seq.fromList
           [(obj, mov, board, [], actionCalc calcType board 0 mov) | mov <- moves obj board]
-   in trace "doing pathfind" pathfind calcType targetx initialQueue Map.empty
+   in pathfind calcType targetx initialQueue Map.empty
 
 pathfind :: PathCalcType -> Object -> SeqActMem -> HashPath -> PossiblePaths
 pathfind _ _ Seq.Empty _ = []
 pathfind calcType targetx ((obj, act, board, path, cost) :<| queue) hashmap
   | value act == position targetx =
     case act of
-      (Clean pos) -> [(act : path, cost)]
+      (Clean pos) -> [(act : path, newCost)]
       (Drop pos) ->
-        if fromJust (board WO.! pos) == [Crib]
+        if fromJust (board WO.! pos) == [Crib, Robot (Just Kid)]
           then [(act : path, newCost)]
           else keepFinding False
       _ -> keepFinding False

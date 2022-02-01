@@ -2,7 +2,8 @@
 
 module TaskHandlingSpec where
 
-import Agent.Logic.Pathfinding hiding (make)
+import Agent.Logic.Pathfinding.Find
+import Agent.Logic.Pathfinding.PathCalculation (PathCalcType (ShortestPath))
 import Agent.Logic.TaskHandling
 import Agent.Objects
 import Data.List (intersect, sort)
@@ -120,16 +121,26 @@ matrixToTaskTest =
     it "Should return the correct agent #1" $
       let (board, tasks, [agent]) = testData 1
           optimum = optimize (getCostMatrix tasks [agent])
-          result = parseTaskDivision board tasks [agent] optimum
+          result = parseTaskDivision board tasks [agent] optimum calcType
        in result
-            `shouldBe` [mockAgent agent (make Dirt (4, 0)) ([Move (i, 0) | i <- [0 .. 4]] ++ [Clean (4, 0)])]
+            `shouldBe` [ mockAgent
+                           agent
+                           (make Dirt (4, 0))
+                           ([Move (i, 0) | i <- [0 .. 4]] ++ [Clean (4, 0)])
+                       ]
     it "Should return the correct agent #2" $
       let (board, tasks, [agent1, agent2]) = testData 2
           optimum = optimize (getCostMatrix tasks [agent1, agent2])
-          result = parseTaskDivision board tasks [agent1, agent2] optimum
+          result = parseTaskDivision board tasks [agent1, agent2] optimum calcType
        in result
-            `shouldBe` [ mockAgent agent1 (make Dirt (4, 0)) ([Move (i, 0) | i <- [0 .. 4]] ++ [Clean (4, 0)]),
-                         mockAgent agent2 (make Dirt (4, 4)) ([Move (i, 4) | i <- [0 .. 4]] ++ [Clean (4, 4)])
+            `shouldBe` [ mockAgent
+                           agent1
+                           (make Dirt (4, 0))
+                           ([Move (i, 0) | i <- [0 .. 4]] ++ [Clean (4, 0)]),
+                         mockAgent
+                           agent2
+                           (make Dirt (4, 4))
+                           ([Move (i, 4) | i <- [0 .. 4]] ++ [Clean (4, 4)])
                        ]
   where
     mockAgent :: Agent -> Object -> [Action (Int, Int)] -> Agent
@@ -153,14 +164,14 @@ assignTaskTest = describe "Correct assignation of tasks to agents" $ do
           [ mockAgent ent [mov] target
             | (ent, mov, target) <- zip3 robots moves dirts
           ]
-        assigned = assignTasks board agents
+        assigned = assignTasks board agents calcType
      in assigned `shouldBe` agents
   it "Should assign different tasks to each agent" $
     let dirts@[dirt1, dirt2, dirt3] = makeMany Dirt [(4, 0), (0, 4), (2, 2)]
         robots = makeMany (Robot Nothing) [(6, i * 2) | i <- [0 .. 2]]
         board = newBoard 7 5 *++ (dirts ++ robots)
         agents = [mockAgent ent [] ent | ent <- robots]
-        resultAgents = assignTasks board agents
+        resultAgents = assignTasks board agents calcType
         resultDest = map (destinaton . fromJust . task) resultAgents
      in length (resultDest `intersect` dirts) `shouldBe` length dirts
   it "Should assign tasks with a path through a narrow corridor" $
@@ -169,7 +180,7 @@ assignTaskTest = describe "Correct assignation of tasks to agents" $ do
         robots = makeMany (Robot Nothing) [(5, 0), (5, 2), (5, 4)] -- [(5, j) | j <- [0, 2, 4]]
         board = newBoard 6 5 *++ (obstacles ++ dirts ++ robots)
         agents = [Agent rob Nothing | rob <- robots]
-        resultAgents = assignTasks board agents
+        resultAgents = assignTasks board agents calcType
         resultDest = map destinaton (mapMaybe task resultAgents)
      in do
           print resultAgents
@@ -235,10 +246,12 @@ testData num
      in (board, tasks, agents)
   | otherwise = error "Invalid test data"
   where
-    localHandleTasks board agents = findSolvers board (getTasks board agents) agents
+    localHandleTasks board agents = findSolvers board (getTasks board agents) agents calcType
 
 naturals :: [Int] -> [Natural]
 naturals = map natural
 
 natural :: Int -> Natural
 natural val = if val >= 0 then Natural val else Infinite
+
+calcType = ShortestPath

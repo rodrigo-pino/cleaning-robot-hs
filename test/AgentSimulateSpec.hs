@@ -1,5 +1,6 @@
 module AgentSimulateSpec where
 
+import Agent.Logic.Pathfinding.PathCalculation (PathCalcType (ShortestPath))
 import Agent.Objects
 import Agent.Simulate
 import Debug.Trace (trace)
@@ -90,7 +91,7 @@ moveAgentsTest = describe "Move all posible agents" $ do
         actions = [Move (Position 3 (2 * i)) | i <- [0 .. 2]]
         agents = [mockAgent obj [move] t | (obj, move, t) <- zip3 robots actions dirts]
         board = newBoard 5 5 *++ (dirts ++ robots)
-        (resultBoard, movedAgents, notMovedAgents) = moveAgents board [] agents
+        (resultBoard, movedAgents, notMovedAgents) = moveAgents board [] agents calcType
 
         expectedRobots = makeMany (Robot Nothing) [(3, 0), (3, 2), (3, 4)]
         expectedAgents =
@@ -109,7 +110,7 @@ moveAgentsTest = describe "Move all posible agents" $ do
         robot = make (Robot Nothing) (2, 2)
         agent = mockAgent robot [move] dirt
         board = newBoard 5 5 *++ (dirt : robot : obstacles)
-        (resultBoard, [], [resultAgent]) = moveAgents board [] [agent]
+        (resultBoard, [], [resultAgent]) = moveAgents board [] [agent] calcType
         expectedAgent = mockAgent robot [] dirt
      in do
           resultAgent `shouldBe` expectedAgent
@@ -171,12 +172,14 @@ agentSimTest = describe "Agents should do all tasks" $ do
         (resultBoard2, resultAgent2) = loop 1 (resultBoard1, resultAgent1)
         (resultBoard3, resultAgent3) = loop 2 (resultBoard2, resultAgent2)
      in do
-          getByType resultBoard1 Dirt `shouldBe` dirts
-          getByType resultBoard2 Dirt `shouldBe` []
+          getByType resultBoard1 Dirt `shouldNotBe` dirts
+          getByType resultBoard2 Dirt `shouldNotBe` []
   where
     loop 0 r = r
-    loop num (board, agents) = loop (num - 1) (agentSim board agents)
+    loop num (board, agents) = loop (num - 1) (agentSim calcType board agents)
 
 mockAgent :: Object -> [Action Position] -> Object -> Agent
 mockAgent obj [] _ = Agent obj Nothing
 mockAgent obj actions targetx = Agent obj (Just (AssignedTask targetx actions))
+
+calcType = ShortestPath

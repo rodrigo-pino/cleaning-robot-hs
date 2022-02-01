@@ -1,5 +1,6 @@
 module Simulation where
 
+import Agent.Logic.Pathfinding.PathCalculation
 import Agent.Objects
 import Agent.Simulate
 import System.Random (StdGen, mkStdGen)
@@ -8,22 +9,22 @@ import World.Board
 import World.Objects
 import World.Simulate
 
-runSimulation :: Int -> Int -> Int -> IO ()
-runSimulation simSelect duration shuffleTime =
+runSimulation :: Int -> Int -> Int -> PathCalcType -> IO ()
+runSimulation simSelect duration shuffleTime calcType =
   let selectedBoard = boardSelect simSelect
       initalAgents = agentInit selectedBoard
       g = mkStdGen simSelect
    in do
-        simulation selectedBoard initalAgents duration shuffleTime g
+        simulation selectedBoard initalAgents duration shuffleTime g calcType
 
-simulation :: Board -> [Agent] -> Int -> Int -> StdGen -> IO ()
-simulation board _ 0 _ _ = simOutput board 0
-simulation board agents times shuffleT g =
-  let (boardByAgents, updatedAgents) = agentSim board agents
+simulation :: Board -> [Agent] -> Int -> Int -> StdGen -> PathCalcType -> IO ()
+simulation board _ 0 _ _ _ = simOutput board 0
+simulation board agents times shuffleT g calcType =
+  let (boardByAgents, updatedAgents) = agentSim calcType board agents
       (boardByWorld, newG) = worldSim boardByAgents g False
    in do
         simOutput boardByWorld times
-        simulation boardByWorld updatedAgents (times - 1) shuffleT newG
+        simulation boardByWorld updatedAgents (times - 1) shuffleT newG calcType
 
 simOutput board times = do
   print ("Time: " ++ show times)

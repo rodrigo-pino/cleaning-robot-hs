@@ -1,4 +1,4 @@
-module Agent.Logic.Pathfinding where
+module Agent.Logic.PathfindingOld where
 
 import Agent.Objects
 import Data.Maybe (fromJust, isJust)
@@ -29,29 +29,6 @@ type SeqActMem = Seq (Object, Action Position, Board, [Action Position])
 type SetAct = [(Action Position, ObjectType)]
 
 type ReachedTask = (Object, Natural)
-
-findSolvers :: Board -> [Task] -> [Agent] -> [Task]
-findSolvers _ tasks [] =
-  [ Task {target = targetx, solvers = reverse solversx}
-    | taskx <- tasks,
-      let targetx = target taskx,
-      let solversx = solvers taskx,
-      not (null solversx)
-  ]
-findSolvers board tasks (ag : agents) = findSolvers board updatedTasks agents
-  where
-    foundTasks = reachableTasks (robotlessBoard board ag) ag
-    updatedTasks =
-      [ newTask
-        | taskx <- tasks,
-          let solversx = solvers taskx,
-          let targetx = target taskx,
-          let time = lookup targetx foundTasks,
-          let newTask =
-                if isJust time
-                  then Task targetx (Solver ag (fromJust time) : solversx)
-                  else taskx
-      ]
 
 reachableTasks :: Board -> Agent -> [ReachedTask]
 reachableTasks board agentx = searchAll initialQueue []

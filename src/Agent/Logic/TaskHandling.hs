@@ -1,6 +1,7 @@
 module Agent.Logic.TaskHandling where
 
-import Agent.Logic.Pathfinding
+import Agent.Logic.Pathfinding.Find
+import Agent.Logic.Pathfinding.PathCalculation
 import Agent.Objects
 import Data.List (elemIndex)
 import qualified Data.Matrix as M
@@ -12,10 +13,10 @@ import World.Objects
 -- Minimum value and its position, current coordinates
 type Acc = ((Natural, (Int, Int)), (Int, Int))
 
-assignTasks :: Board -> [Agent] -> [Agent]
-assignTasks board agents = getOptimalTaskDivison board tasks agents
+assignTasks :: Board -> [Agent] -> PathCalcType -> [Agent]
+assignTasks board agents calcType = getOptimalTaskDivison board tasks agents calcType
   where
-    tasks = findSolvers board (getTasks board agents) agents
+    tasks = findSolvers board (getTasks board agents) agents calcType
 
 getTasks :: Board -> [Agent] -> [Task]
 getTasks board agents = [tsk | tsk <- tasks, target tsk `notElem` takenTasks]
@@ -32,10 +33,10 @@ getTasks board agents = [tsk | tsk <- tasks, target tsk `notElem` takenTasks]
           isJust assignedTask
       ]
 
-getOptimalTaskDivison :: Board -> [Task] -> [Agent] -> [Agent]
-getOptimalTaskDivison board tasks agents
+getOptimalTaskDivison :: Board -> [Task] -> [Agent] -> PathCalcType -> [Agent]
+getOptimalTaskDivison board tasks agents calcType
   | null rawTaskAssignment = agents
-  | otherwise = parseTaskDivision board tasks agents rawTaskAssignment
+  | otherwise = parseTaskDivision board tasks agents rawTaskAssignment calcType
   where
     costMatrix = getCostMatrix tasks agents
     rawTaskAssignment = optimize costMatrix
@@ -100,8 +101,8 @@ minimumCost costMatrix currentIndex = fst (foldl f ((Infinite, (-1, -1)), (0, 0)
     hardNotEq v (x : xs) = fst v /= fst x && snd v /= snd x && hardNotEq v xs
 
 -- Get tasks agents and how they will be split, and returns new tasks
-parseTaskDivision :: Board -> [Task] -> [Agent] -> [(Int, Int)] -> [Agent]
-parseTaskDivision board tasks agents assignation =
+parseTaskDivision :: Board -> [Task] -> [Agent] -> [(Int, Int)] -> PathCalcType -> [Agent]
+parseTaskDivision board tasks agents assignation calcType =
   zipWith (curry assign) [0 .. length agents - 1] agents
   where
     assign (i, agent)
@@ -120,7 +121,7 @@ parseTaskDivision board tasks agents assignation =
         assignedTask = task agent
         taskIndex = searchTask i assignation
         designatedTask = tasks !! taskIndex
-        path = pathToTask board agent (target designatedTask)
+        path = findObject board agent (target designatedTask) calcType
 
     searchTask i [] = -1
     searchTask i (x : xs)

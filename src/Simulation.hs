@@ -15,6 +15,7 @@ runSimulation simSelect duration shuffleTime calcType =
       initalAgents = agentInit selectedBoard
       g = mkStdGen simSelect
    in do
+        simOutput selectedBoard duration
         simulation selectedBoard initalAgents duration shuffleTime g calcType
 
 simulation :: Board -> [Agent] -> Int -> Int -> StdGen -> PathCalcType -> IO ()

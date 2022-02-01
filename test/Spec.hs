@@ -1,4 +1,5 @@
 import AgentSimulateSpec
+import PathCalculationSpec
 import PathfindingSpec
 import TaskHandlingSpec
 import Test.Hspec (hspec)
@@ -38,3 +39,5 @@ main = do
   hspec agentSimTest
   -- Visual Tests
   hspec visualTest
+  -- Path Calculation Tests
+  hspec bestRewardSpec

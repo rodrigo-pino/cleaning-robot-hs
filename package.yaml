@@ -26,6 +26,8 @@ dependencies:
   - containers
   - random
   - hashmap
+  - unordered-containers
+  - hashable
 
 library:
   source-dirs: src

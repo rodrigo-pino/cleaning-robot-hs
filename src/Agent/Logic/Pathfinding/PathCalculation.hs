@@ -20,7 +20,7 @@ bestRewardCalc board acc@(Natural val) move =
       | fromJust (board ! pos) == [Crib, Robot (Just Kid)] ->
         min
           (Natural (val `div` 2)) -- to reward long paths
-          (acc - baseMoveCost * 5) -- to reward short paths
+          (acc - baseMoveCost * avg) -- to reward short paths
       | otherwise -> acc + baseMoveCost * (1 + 2 * kidsAround pos)
     Grab pos -> acc + baseMoveCost * (1 - 2 * kidsAround pos)
     Clean pos -> acc - (2 * baseMoveCost)
@@ -30,3 +30,4 @@ bestRewardCalc board acc@(Natural val) move =
     -- Helpers
     baseMoveCost = Natural 100
     kidsAround position = Natural (length (filter ([Kid] ==) (adyacentsTo board position)))
+    avg = Natural ((maxRows board + maxCols board) `div` 2)

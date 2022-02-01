@@ -4,6 +4,7 @@ import Agent.Logic.Pathfinding.PathCalculation
 import Agent.Objects
 import Data.HashMap.Strict (HashMap (..), member)
 import qualified Data.HashMap.Strict as Map
+import qualified Data.HashPSQ as PSQ
 import Data.Maybe (fromJust, isJust)
 import Data.Sequence (Seq (..))
 import qualified Data.Sequence as Seq
@@ -35,7 +36,7 @@ type PossiblePaths = [([Action Position], Natural)]
 
 reachableTasks :: Board -> Agent -> PathCalcType -> [ReachedTask]
 reachableTasks board agentx calcType =
-  let allActions = searchAll calcType initialQueue Map.empty
+  let allActions = trace "doing searchalll" searchAll calcType initialQueue Map.empty
    in actionToTasks board allActions
   where
     -- queue has initial moves at first
@@ -84,17 +85,17 @@ pathToTask board agentx targetx calcType =
       initialQueue =
         Seq.fromList
           [(obj, mov, board, [], actionCalc calcType board 0 mov) | mov <- moves obj board]
-   in pathfind calcType targetx initialQueue Map.empty
+   in trace "doing pathfind" pathfind calcType targetx initialQueue Map.empty
 
 pathfind :: PathCalcType -> Object -> SeqActMem -> HashPath -> PossiblePaths
 pathfind _ _ Seq.Empty _ = []
 pathfind calcType targetx ((obj, act, board, path, cost) :<| queue) hashmap
   | value act == position targetx =
     case act of
-      (Clean pos) -> (act : path, cost) : keepFinding True
+      (Clean pos) -> [(act : path, cost)]
       (Drop pos) ->
         if fromJust (board WO.! pos) == [Crib]
-          then (act : path, newCost) : keepFinding True
+          then [(act : path, newCost)]
           else keepFinding False
       _ -> keepFinding False
   | otherwise = keepFinding False
@@ -104,7 +105,7 @@ pathfind calcType targetx ((obj, act, board, path, cost) :<| queue) hashmap
       | completedTask = pathfind calcType targetx queue newHashmap
       | isJust maybeOldCost =
         let oldCost = fromJust maybeOldCost
-         in if cost < oldCost
+         in if newCost < oldCost
               then pathfind calcType targetx newQueue newHashmap
               else pathfind calcType targetx queue hashmap
       | otherwise = pathfind calcType targetx newQueue newHashmap

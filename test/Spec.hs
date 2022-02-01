@@ -41,3 +41,4 @@ main = do
   hspec visualTest
   -- Path Calculation Tests
   hspec bestRewardSpec
+  hspec bestRewardPathfindingSpec

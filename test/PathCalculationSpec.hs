@@ -1,6 +1,8 @@
 module PathCalculationSpec where
 
+import Agent.Logic.Pathfinding.Find
 import Agent.Logic.Pathfinding.PathCalculation
+import Agent.Objects
 import Test.Hspec
 import Test.Tasty
 import Test.Tasty.Hspec
@@ -17,7 +19,7 @@ bestRewardSpec = describe "Best reward calculation are done correctly" $ do
           actionCalc calcType board 1000 m1 `shouldBe` 1100
           actionCalc calcType board 1000 m2 `shouldBe` 1500
           actionCalc calcType board 3000 m3 `shouldBe` 1500
-          actionCalc calcType board 700 m3 `shouldBe` 200
+          actionCalc calcType board 700 m3 `shouldBe` -500
   it "Should have the correct value after grabbing a kid" $
     let robots = makeMany (Robot Nothing) [(i, i) | i <- [0, 4]]
         kids = makeMany Kid [(i, i + 1) | i <- [0, 4]]
@@ -40,3 +42,16 @@ bestRewardSpec = describe "Best reward calculation are done correctly" $ do
      in actionCalc calcType board 500 move `shouldBe` 600
   where
     calcType = BestReward
+
+bestRewardPathfindingSpec = describe "Pathfind works correctly with best reward" $ do
+  it "Should find the path to the crib task" $
+    let robot = make (Robot Nothing) (0, 0)
+        kid = make Kid (1, 1)
+        crib = make Crib (2, 2)
+        board = newBoard 3 3 *++ [robot, kid, crib]
+        ag = Agent robot Nothing
+        pathShort = findObject board ag crib ShortestPath
+        pathBest = findObject board ag crib BestReward
+     in do
+          print pathShort
+          print pathBest

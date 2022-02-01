@@ -189,3 +189,16 @@ kidClusterDetection = describe "Detect kid clusters" $ do
           clusters `shouldBe` expected
   where
     board = newBoard 20 20
+
+allKidsInCribsTest :: SpecWith ()
+allKidsInCribsTest = describe "Detect when all kids are in cribs" $ do
+  it "Should detect correctly that all kids are cribbed" $
+    let kids = makeMany Kid [(i, j) | i <- [1, 2, 3], j <- [1, 2, 3]]
+        cribs = makeMany Crib [(i, j) | i <- [1, 2, 3], j <- [1, 2, 3]]
+        board = newBoard 4 4 *++ (kids ++ cribs)
+     in allKidsInCribs board `shouldBe` True
+  it "Should detect correctly that all kids are not cribbed" $
+    let kids = makeMany Kid [(i, j) | i <- [1, 2, 3], j <- [1, 2, 4]]
+        cribs = makeMany Crib [(i, j) | i <- [1, 2, 3], j <- [1, 2, 3]]
+        board = newBoard 4 4 *++ (kids ++ cribs)
+     in allKidsInCribs board `shouldBe` False

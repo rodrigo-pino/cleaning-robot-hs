@@ -9,23 +9,27 @@ import World.Board
 import World.Objects
 import World.Simulate
 
-runSimulation :: Int -> Int -> Int -> PathCalcType -> IO ()
-runSimulation simSelect duration shuffleTime calcType =
+runSimulation :: Int -> Int -> PathCalcType -> IO ()
+runSimulation simSelect shuffleTime calcType =
   let selectedBoard = boardSelect simSelect
       initalAgents = agentInit selectedBoard
+      duration = 0
       g = mkStdGen simSelect
    in do
         simOutput selectedBoard duration
         simulation selectedBoard initalAgents duration shuffleTime g calcType
 
 simulation :: Board -> [Agent] -> Int -> Int -> StdGen -> PathCalcType -> IO ()
-simulation board _ 0 _ _ _ = simOutput board 0
 simulation board agents times shuffleT g calcType =
   let (boardByAgents, updatedAgents) = agentSim calcType board agents
       (boardByWorld, newG) = worldSim boardByAgents g False
    in do
         simOutput boardByWorld times
-        simulation boardByWorld updatedAgents (times - 1) shuffleT newG calcType
+        endSim <- endSim board
+        print endSim
+        if not endSim
+          then simulation boardByWorld updatedAgents (times + 1) shuffleT newG calcType
+          else print "Simulation Ended"
 
 simOutput board times = do
   print ("Time: " ++ show times)
@@ -34,6 +38,18 @@ simOutput board times = do
   print ("Dirtiness: " ++ show (calculateDirtiness board) ++ "%")
   printState board
   print ""
+
+endSim :: Board -> IO Bool
+endSim board
+  | calculateDirtiness board >= 60 =
+    do
+      print "House got 60% dirty"
+      return True
+  | allKidsInCribs board =
+    do
+      print "All kids in cribs"
+      return True
+  | otherwise = return False
 
 boardSelect :: Int -> Board
 boardSelect num =

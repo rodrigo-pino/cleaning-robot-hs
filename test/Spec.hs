@@ -16,6 +16,7 @@ main = do
   hspec robotWithKidTest
   hspec actionApplicationTest
   hspec kidClusterDetection
+  hspec allKidsInCribsTest
   -- Board Simulation Specs
   hspec testRandomPicking
   hspec testBoardShuffling

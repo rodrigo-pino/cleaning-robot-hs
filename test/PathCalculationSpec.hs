@@ -19,7 +19,7 @@ bestRewardSpec = describe "Best reward calculation are done correctly" $ do
           actionCalc calcType board 1000 m1 `shouldBe` 1100
           actionCalc calcType board 1000 m2 `shouldBe` 1500
           actionCalc calcType board 3000 m3 `shouldBe` 1500
-          actionCalc calcType board 700 m3 `shouldBe` -500
+          actionCalc calcType board 700 m3 `shouldBe` -300
   it "Should have the correct value after grabbing a kid" $
     let robots = makeMany (Robot Nothing) [(i, i) | i <- [0, 4]]
         kids = makeMany Kid [(i, i + 1) | i <- [0, 4]]

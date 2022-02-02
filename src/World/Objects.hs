@@ -3,7 +3,7 @@
 module World.Objects where
 
 import Data.Hashable
-import Data.List (nub, sort)
+import Data.List (foldl', nub, sort)
 import Data.Maybe
 import Debug.Trace (trace)
 
@@ -55,6 +55,9 @@ instance Ord Object where
 
 instance Show Object where
   show obj = "{" ++ show (typex obj) ++ ":" ++ show (position obj) ++ "}"
+
+instance Hashable Object where
+  hashWithSalt salt obj = hash (show obj)
 
 class Movable a where
   update :: a -> Position -> a
@@ -120,11 +123,13 @@ popTypes board objTypes = (Board keep n m, remove)
   where
     m = maxCols board
     n = maxCols board
-    (remove, keep) = foldl popFunc ([], []) (elems board)
+    (remove, keep) = foldl' popFunc ([], []) (elems board)
     popFunc (remove, keep) val =
-      if typex val `elem` objTypes
-        then (val : remove, keep)
-        else (remove, val : keep)
+      let updRemove = val : remove
+          updKeep = val : keep
+       in if typex val `elem` objTypes
+            then updRemove `seq` (updRemove, keep)
+            else updKeep `seq` (remove, updKeep)
 
 -- Returns all adyacent ObjecTypes of a certain position
 adyacentsTo :: Board -> Position -> [[ObjectType]]

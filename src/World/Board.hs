@@ -4,6 +4,7 @@ import Data.List (delete, nub)
 import Data.Map (Map (..))
 import qualified Data.Map as Map
 import Data.Maybe (catMaybes, fromJust, isJust, isNothing)
+import GHC.List (foldl')
 import World.Objects
 
 moves :: Object -> Board -> [Action Position]
@@ -95,7 +96,7 @@ getKidCluster :: Board -> Map Object Int
 getKidCluster board = clusters
   where
     kids = getByType board Kid
-    clusters = foldl addCluster Map.empty kids
+    clusters = foldl' addCluster Map.empty kids
     addCluster acc kid =
       let kidsAround = length (filter ([Kid] ==) (adyacentsTo board (position kid)))
        in Map.insert kid kidsAround acc

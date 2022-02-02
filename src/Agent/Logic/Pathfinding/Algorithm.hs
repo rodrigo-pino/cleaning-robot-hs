@@ -4,10 +4,13 @@ import Agent.Logic.Pathfinding.PathCalculation
 import Agent.Objects
 import Data.HashMap.Strict (HashMap (..), member)
 import qualified Data.HashMap.Strict as Map
+import Data.HashPSQ (HashPSQ (..))
 import qualified Data.HashPSQ as PSQ
 import Data.Maybe (fromJust, isJust)
 import Data.Sequence (Seq (..))
 import qualified Data.Sequence as Seq
+import Debug.Trace (trace)
+import GHC.List (foldl')
 import World.Board
 import World.Objects
   ( Action (..),
@@ -31,6 +34,8 @@ type SeqAct = Seq (Object, Action Position, Board, Natural)
 
 type SeqActMem = Seq (Object, Action Position, Board, [Action Position], Natural)
 
+type PQueue = HashPSQ (Object, Action Position) Natural (Board, [Action Position])
+
 type PossiblePaths = [([Action Position], Natural)]
 
 reachableTasks :: Board -> Agent -> PathCalcType -> [ReachedTask]
@@ -50,7 +55,7 @@ reachableTasks board agentx calcType =
       Nothing -> (entity agentx, 0, board)
       Just assignedTask ->
         let newPos = (position . destinaton) assignedTask
-            newTime = pathCalc calcType board (actions assignedTask)
+            newTime = pathCalc calcType board (destinaton assignedTask) (actions assignedTask)
             oldObj = entity agentx
             newObj = Object (Robot Nothing) newPos
             newBoard = (board *-- [destinaton assignedTask, oldObj]) *+ newObj
@@ -68,10 +73,20 @@ searchAll calcType ((obj, act, board, cost) :<| queue) hashmap
   where
     -- Logic
     (newObj, newBoard) = localApplyMove board obj act
-    newCost = actionCalc calcType board cost act
+    newCost = actionCalc calcType board Nothing cost act
     newHashmap = Map.insert key newCost hashmap
     nextMoves = moves newObj newBoard
-    newQueue = foldl (\acc val -> acc :|> (newObj, val, newBoard, newCost)) queue nextMoves
+    newQueue =
+      foldl'
+        ( \acc val ->
+            newObj
+              `seq` val
+              `seq` newBoard
+              `seq` newCost
+              `seq` acc :|> (newObj, val, newBoard, newCost)
+        )
+        queue
+        nextMoves
 
     -- Helpers
     maybeOldCost = Map.lookup (act, objType) hashmap
@@ -82,43 +97,60 @@ pathToTask :: Board -> Agent -> Object -> PathCalcType -> PossiblePaths
 pathToTask board agentx targetx calcType =
   let obj = entity agentx
       initialQueue =
-        Seq.fromList
-          [(obj, mov, board, [], actionCalc calcType board 0 mov) | mov <- moves obj board]
+        PSQ.fromList
+          [ ( (obj, mov),
+              actionCalc calcType board (Just targetx) 0 mov,
+              (board, [])
+            )
+            | mov <- moves obj board
+          ]
    in pathfind calcType targetx initialQueue Map.empty
 
-pathfind :: PathCalcType -> Object -> SeqActMem -> HashPath -> PossiblePaths
-pathfind _ _ Seq.Empty _ = []
-pathfind calcType targetx ((obj, act, board, path, cost) :<| queue) hashmap
+pathfind :: PathCalcType -> Object -> PQueue -> HashPath -> PossiblePaths
+pathfind calcType targetx pqueue hashmap
+  | PSQ.null pqueue = []
   | value act == position targetx =
     case act of
-      (Clean pos) -> [(act : path, newCost)]
+      (Clean pos) -> [(newPath, newCost)] -- : keepFinding True
       (Drop pos) ->
         if fromJust (board WO.! pos) == [Crib, Robot (Just Kid)]
-          then [(act : path, newCost)]
+          then [(newPath, newCost)] -- : keepFinding True
           else keepFinding False
       _ -> keepFinding False
   | otherwise = keepFinding False
   where
     -- Logic
     keepFinding completedTask
-      | completedTask = pathfind calcType targetx queue newHashmap
+      | completedTask = pathfind calcType targetx updPqueue newHashmap
       | isJust maybeOldCost =
         let oldCost = fromJust maybeOldCost
          in if newCost < oldCost
               then pathfind calcType targetx newQueue newHashmap
-              else pathfind calcType targetx queue hashmap
+              else pathfind calcType targetx updPqueue hashmap
       | otherwise = pathfind calcType targetx newQueue newHashmap
 
     -- Updating vars
     (newObj, newBoard) = localApplyMove board obj act
-    newCost = actionCalc calcType board cost act
+    newCost = actionCalc calcType board (Just targetx) cost act
+    newPath = act : path
     newHashmap = Map.insert key newCost hashmap
     nextMoves = moves newObj newBoard
     newQueue =
-      foldl
-        (\acc val -> acc :|> (newObj, val, newBoard, act : path, newCost))
-        queue
+      foldl'
+        ( \acc val ->
+            newObj
+              `seq` val
+              `seq` newCost
+              `seq` newBoard
+              `seq` newPath
+              `seq` PSQ.insert (newObj, val) newCost (newBoard, newPath) acc
+        )
+        updPqueue
         nextMoves
+
+    -- Extracting vars
+    ((obj, act), cost, (board, path)) = fromJust (PSQ.findMin pqueue)
+    updPqueue = PSQ.deleteMin pqueue
 
     -- Helpers
     maybeOldCost = Map.lookup (act, objType) hashmap
@@ -145,12 +177,14 @@ actionToTasks board hashmap = loop allActions
     -- Loop through all actions and select the ones wich corresponds to a task
     loop ((Clean p, t) : actions) = (make Dirt p, t) : loop actions
     loop ((Drop p, t) : actions)
-      | fromJust (board WO.! p) == [Crib] = (make Crib p, t) : loop actions
+      | Crib `elem` cellP && Kid `notElem` cellP = (make Crib p, t) : loop actions
       | otherwise = loop actions
+      where
+        cellP = fromJust (board WO.! p)
     loop (_ : actions) = loop actions
     loop [] = []
 
     allActions = [(act, t) | ((act, _), t) <- Map.toList hashmap]
 
-pathCalc :: PathCalcType -> Board -> [Action Position] -> Natural
-pathCalc calcType board = foldl (actionCalc calcType board) 0
+pathCalc :: PathCalcType -> Board -> Object -> [Action Position] -> Natural
+pathCalc calcType board target = foldl' (actionCalc calcType board (Just target)) 0

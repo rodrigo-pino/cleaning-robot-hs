@@ -5,6 +5,7 @@ import Agent.Logic.Pathfinding.PathCalculation
 import Agent.Objects (Agent (..), Natural (..), Solver (..), Task (..), getTask)
 import Data.Maybe (fromJust, isJust)
 import Debug.Trace (trace)
+import GHC.List (foldl')
 import World.Objects (Action (..), Board (..), Object (..), ObjectType (..), Position (..))
 import qualified World.Objects as WO
 
@@ -34,7 +35,7 @@ findSolvers board tasks (ag : agents) calcType = findSolvers board updatedTasks 
 findObject :: Board -> Agent -> Object -> PathCalcType -> [Action Position]
 findObject board ag targetx calcType =
   let paths = pathToTask board ag targetx calcType
-      (bestPath, _) = foldl takeMin ([], Infinite) paths
+      (bestPath, _) = foldl' takeMin ([], Infinite) paths
    in reverse bestPath
   where
     takeMin acc@(_, accCost) val@(_, valCost) =

@@ -3,7 +3,7 @@ module Agent.Logic.TaskHandling where
 import Agent.Logic.Pathfinding.Find
 import Agent.Logic.Pathfinding.PathCalculation
 import Agent.Objects
-import Data.List (elemIndex)
+import Data.List (elemIndex, foldl')
 import qualified Data.Matrix as M
 import Data.Maybe (catMaybes, fromJust, fromMaybe, isJust, isNothing, mapMaybe)
 import Debug.Trace (trace)
@@ -79,7 +79,7 @@ optimize costMatrix = fromMaybe [] (foldr extract Nothing dp)
     valid (i, j) = (i + 1, j + 1)
 
 minimumCost :: M.Matrix (Natural, [(Int, Int)]) -> (Int, Int) -> (Natural, (Int, Int))
-minimumCost costMatrix currentIndex = fst (foldl f ((Infinite, (-1, -1)), (0, 0)) costMatrix)
+minimumCost costMatrix currentIndex = fst (foldl' f ((Infinite, (-1, -1)), (0, 0)) costMatrix)
   where
     n = M.nrows costMatrix
     m = M.ncols costMatrix

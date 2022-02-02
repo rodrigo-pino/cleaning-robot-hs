@@ -7,6 +7,7 @@ import Agent.Logic.TaskHandling (assignTasks)
 import Agent.Objects
 import Data.Maybe (fromJust, isJust, isNothing)
 import Debug.Trace (trace)
+import GHC.List (foldl')
 import World.Objects
 
 agentInit :: Board -> [Agent]
@@ -81,5 +82,5 @@ removeActiveAgents :: Board -> Agent -> [Agent] -> Board
 removeActiveAgents board ag agents = board *-- remove
   where
     -- get all robots for possible removoal, except the one of the agent in question
-    remove = foldl f [] (filter (/= ag) agents)
+    remove = foldl' f [] (filter (/= ag) agents)
     f acc val = if (isJust . task) val then entity val : acc else acc

@@ -13,9 +13,8 @@ type KidCluster = Map Object Int
 worldInit :: Int -> Int -> [Object] -> Board
 worldInit rows cols objects = Board objects rows cols
 
-worldSim :: Board -> StdGen -> Bool -> (Board, StdGen)
-worldSim board g True = shuffle board g
-worldSim board g False = moveKids board g
+worldSim :: Board -> StdGen -> (Board, StdGen)
+worldSim = moveKids
 
 moveKids :: Board -> StdGen -> (Board, StdGen)
 moveKids board g =

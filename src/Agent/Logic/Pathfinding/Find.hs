@@ -40,7 +40,7 @@ findSolversPar board tasks agents calcType = updatedTasks
     -- Task Updating
     updatedTasks = g tasks
     g [] = []
-    g (t : ts) = (solvers `deepseq` newTask) `par` (restTasks `pseq` newTask : restTasks)
+    g (t : ts) = newTask `par` (restTasks `pseq` newTask : restTasks)
       where
         -- recursion
         restTasks = g ts
@@ -62,11 +62,26 @@ findSolversPar board tasks agents calcType = updatedTasks
         rt = reachableTasks (robotlessBoard board x) x calcType
         rts = f xs
 
+findObjects :: Board -> [Agent] -> [Object] -> PathCalcType -> [[Action Position]]
+findObjects board agents targets calcType = paths
+  where
+    paths = f agents targets
+    f [] [] = []
+    f (ag : ags) (tg : tgs) = p `par` (ps `pseq` p : ps)
+      where
+        -- recursion
+        ps = f ags tgs
+        -- logic
+        p = pathToTask board ag tg calcType
+
+findTargets :: Board -> [Agent] -> PathCalcType -> [[Action Position]]
+findTargets board agents = findObjects board agents (map (fromJust . getTask) agents)
+
 findObject :: Board -> Agent -> Object -> PathCalcType -> [Action Position]
 findObject board ag targetx calcType =
-  let paths = pathToTask board ag targetx calcType
-      (bestPath, _) = foldl' takeMin ([], Infinite) paths
-   in reverse bestPath
+  let bestPath = pathToTask board ag targetx calcType
+   in -- (bestPath, _) = foldl' takeMin ([], Infinite) paths
+      reverse bestPath
   where
     takeMin acc@(_, accCost) val@(_, valCost) =
       if valCost < accCost then val else acc

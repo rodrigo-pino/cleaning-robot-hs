@@ -93,7 +93,7 @@ searchAll calcType ((obj, act, board, cost) :<| queue) hashmap
     key = (act, objType)
     objType = typex obj
 
-pathToTask :: Board -> Agent -> Object -> PathCalcType -> PossiblePaths
+pathToTask :: Board -> Agent -> Object -> PathCalcType -> [Action Position]
 pathToTask board agentx targetx calcType =
   let obj = entity agentx
       initialQueue =
@@ -106,15 +106,15 @@ pathToTask board agentx targetx calcType =
           ]
    in pathfind calcType targetx initialQueue Map.empty
 
-pathfind :: PathCalcType -> Object -> PQueue -> HashPath -> PossiblePaths
+pathfind :: PathCalcType -> Object -> PQueue -> HashPath -> [Action Position]
 pathfind calcType targetx pqueue hashmap
   | PSQ.null pqueue = []
   | value act == position targetx =
     case act of
-      (Clean pos) -> [(newPath, newCost)] -- : keepFinding True
+      (Clean pos) -> newPath -- [(newPath, newCost)] -- : keepFinding True
       (Drop pos) ->
         if fromJust (board WO.! pos) == [Crib, Robot (Just Kid)]
-          then [(newPath, newCost)] -- : keepFinding True
+          then newPath -- [(newPath, newCost)] -- : keepFinding True
           else keepFinding False
       _ -> keepFinding False
   | otherwise = keepFinding False

@@ -3,6 +3,7 @@ module AgentSimulateSpec where
 import Agent.Logic.Pathfinding.PathCalculation (PathCalcType (ShortestPath))
 import Agent.Objects
 import Agent.Simulate
+import Data.Maybe (isNothing)
 import Debug.Trace (trace)
 import Test.Hspec
 import Test.Tasty
@@ -65,26 +66,52 @@ agentApplyMoveTest = describe "Move an agent through the board" $ do
         carryR = make (Robot (Just Kid)) (2, 2)
         agent = mockAgent carryR [move] crib
         (updatedBoard, updatedAgent) = agentApplyMove (board *++ [carryR, crib]) agent move
-        (expectedBoard, expectedAgent) = (board *++ [mainR, crib, kid], mockAgent mainR [move] crib)
+        (expectedBoard, expectedAgent) = (board *++ [mainR, crib, kid], Agent mainR Nothing)
      in do
           updatedAgent `shouldBe` expectedAgent
           updatedBoard `shouldBe` expectedBoard
   it "Should grab the kid" $
     let move = Grab (Position 2 1)
         kid = make Kid (2, 1)
+        crib = make Crib (2, 2)
         carryR = make (Robot (Just Kid)) (2, 1)
-        agent = mockAgent mainR [move] kid
+        agent = mockAgent mainR [move] crib
         (updatedBoard, updatedAgent) = agentApplyMove (board *++ [mainR, kid]) agent move
-        (expectedBoard, expectedAgent) = (board *++ [carryR], mockAgent carryR [move] kid)
+        (expectedBoard, expectedAgent) = (board *++ [carryR], mockAgent carryR [move] crib)
      in do
           updatedAgent `shouldBe` expectedAgent
           updatedBoard `shouldBe` expectedBoard
+  it "Should unassing the agent after mission completion" $
+    let dirt = make Dirt (2, 2)
+        move = Clean (Position 2 2)
+        agent = mockAgent mainR [move] dirt
+        (updBoard, updAg) = agentApplyMove (board *++ [mainR, dirt]) agent move
+        (expBoard, expAg) = (board *++ [mainR], Agent mainR Nothing)
+     in do
+          updBoard `shouldBe` expBoard
+          updAg `shouldBe` expAg
+          (isNothing . task) updAg `shouldBe` True
   where
     mainR = make (Robot Nothing) (2, 2)
     board = newBoard 4 4
 
 moveAgentsTest :: SpecWith ()
 moveAgentsTest = describe "Move all posible agents" $ do
+  it "Should move the agent" $
+    let dirt = make Dirt (0, 3)
+        [robot, expectedRobot] = makeMany (Robot Nothing) [(0, 0), (0, 1)]
+        move = Move (Position 0 1)
+        ag = mockAgent robot [move] dirt
+        board = newBoard 1 4 *++ [dirt, robot]
+        (resultBoard, movedAgents, notMovedAgents) = moveAgents board [] [ag] calcType
+        expectedBoard = newBoard 1 4 *++ [dirt, expectedRobot]
+        expectedAgents = [mockAgent expectedRobot [move] dirt]
+        expectedNotAgents = []
+     in do
+          notMovedAgents `shouldBe` expectedNotAgents
+          movedAgents `shouldBe` expectedAgents
+          resultBoard `shouldBe` expectedBoard
+
   it "Should move all the agents" $
     let dirts = makeMany Dirt [(0, 0), (0, 2), (0, 4)]
         robots = makeMany (Robot Nothing) [(4, 0), (4, 2), (4, 4)]
@@ -145,7 +172,7 @@ agentSimTest = describe "Agents should do all tasks" $ do
         agents = agentInit board
         (resultBoard1, resultAgent1) = loop 6 (board, agents)
         (resultBoard2, resultAgent2) = loop 3 (resultBoard1, resultAgent1)
-        (resultBoard3, resultAgent3) = loop 5 (resultBoard2, resultAgent2)
+        (resultBoard3, resultAgent3) = loop 2 (resultBoard2, resultAgent2)
      in do
           getByType resultBoard1 Dirt `shouldBe` [dirt1, dirt3]
           getByType resultBoard2 Dirt `shouldBe` [dirt1]
@@ -168,10 +195,17 @@ agentSimTest = describe "Agents should do all tasks" $ do
         dirts = makeMany Dirt [(0, i) | i <- [4 .. 7]]
         board = newBoard 1 8 *++ (robots ++ dirts)
         agents = agentInit board
-        (resultBoard1, resultAgent1) = loop 4 (board, agents)
-        (resultBoard2, resultAgent2) = loop 1 (resultBoard1, resultAgent1)
-        (resultBoard3, resultAgent3) = loop 2 (resultBoard2, resultAgent2)
+        (resultBoard1, resultAgent1) = loop 3 (board, agents)
+        (resultBoard2, resultAgent2) = loop 3 (resultBoard1, resultAgent1)
+        (resultBoard3, resultAgent3) = loop 3 (resultBoard2, resultAgent2)
      in do
+          printState resultBoard1
+          print resultAgent1
+          printState resultBoard2
+          print resultAgent2
+          printState resultBoard3
+          print resultAgent3
+
           getByType resultBoard1 Dirt `shouldNotBe` dirts
           getByType resultBoard2 Dirt `shouldNotBe` []
   where

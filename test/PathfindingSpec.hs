@@ -2,7 +2,7 @@ module PathfindingSpec where
 
 import Agent.Logic.Pathfinding.Algorithm (pathToTask, reachableTasks)
 import Agent.Logic.Pathfinding.Algorithm hiding (make)
-import Agent.Logic.Pathfinding.Find (findObject, findSolvers)
+import Agent.Logic.Pathfinding.Find (findObject, findSolvers, findTarget)
 import Agent.Logic.Pathfinding.PathCalculation
 import Agent.Objects
 import Data.List (nub, sort)
@@ -106,5 +106,12 @@ agentPathfindingTest = describe "Test agent correct pathfinding to assigned targ
         pathCalc = length (findObject board agent dirt calcType)
         expected = 11
      in pathCalc `shouldBe` expected
+  it "Should find the path to the far away dirt" $
+    let robot = make (Robot Nothing) (0, 4)
+        dirts@[d1, d2, d3, d4] = makeMany Dirt [(0, i) | i <- [4 .. 7]]
+        board = newBoard 1 8 *++ (robot : dirts)
+        ag = Agent robot (Just (AssignedTask d2 []))
+        path = findTarget board ag calcType
+     in path `shouldBe` [Move (Position 0 5), Clean (Position 0 5)]
 
 calcType = ShortestPath

@@ -48,13 +48,15 @@ balanceCalc board acc@(Natural val) move target =
 balanceCribCalc :: Board -> Natural -> Action Position -> Maybe Object -> Natural
 balanceCribCalc board acc mov@(Drop pos) target
   | fromJust (board ! pos) == [Crib, Robot (Just Kid)] =
-    let cost = balanceCalc board acc mov target
+    let fCost = balanceCalc board acc mov target
         shDistance =
-          findFirstNonCrib
+          trace
+            ("doing distance thing from" ++ show pos)
+            findFirstNonCrib
             (Seq.fromList [(pos + dir, 1) | dir <- directions])
             Set.empty
-     in cost - shDistance * 300
-  | otherwise = balanceCribCalc board acc mov target
+     in trace ("cost is " ++ show (fCost, shDistance * 300, fCost - shDistance * 300)) fCost - (shDistance * 300)
+  | otherwise = balanceCalc board acc mov target
   where
     -- find shortest path
     findFirstNonCrib Seq.Empty _ = Infinite
@@ -62,8 +64,8 @@ balanceCribCalc board acc mov@(Drop pos) target
       | pos `Set.member` visited
           || isNothing maybeCell =
         findFirstNonCrib queue visited
-      | cell == [Crib] = findFirstNonCrib newQueue newVisited
-      | Obstacle `notElem` cell = cost
+      | Crib `elem` cell && Kid `notElem` cell = findFirstNonCrib newQueue newVisited
+      | Obstacle `notElem` cell = trace ("Found clean case in" ++ show cell ++ " at: " ++ show pos) cost
       | otherwise = findFirstNonCrib queue newVisited
       where
         -- store new position
@@ -76,7 +78,7 @@ balanceCribCalc board acc mov@(Drop pos) target
             [pos + dir | dir <- directions]
         -- cache
         maybeCell = board ! pos
-        cell = fromJust maybeCell
+        cell = trace ("Analyzing pos: " ++ show pos) fromJust maybeCell
 balanceCribCalc board acc mov target = balanceCalc board acc mov target
 
 distance p1 p2 =

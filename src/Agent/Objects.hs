@@ -8,6 +8,8 @@ import Data.Maybe (fromJust, isNothing)
 import GHC.Generics (Generic)
 import World.Objects
 
+data AgentType = Bold | Cautious
+
 data AssignedTask = AssignedTask {destinaton :: Object, actions :: [Action Position]}
   deriving (Show, Generic, NFData)
 
@@ -20,12 +22,20 @@ data Task = Task {target :: Object, solvers :: [Solver]} deriving (Show)
 data Natural = Natural Int | Infinite deriving (Show, Generic, NFData)
 
 instance Show Agent where
-  show (Agent entity Nothing) = "Agent: " ++ show entity ++ " Unassigned"
+  show (Agent entity Nothing) = agentEntityShow entity ++ "-Unassigned"
   show (Agent entity (Just aTask)) =
-    "Agent: " ++ show entity ++ " Assigned to: " ++ show (destinaton aTask)
+    agentEntityShow entity ++ "-" ++ show (destinaton aTask) ++ show (actions aTask)
+
+agentEntityShow (Object (Robot Nothing) pos) = "Robot:" ++ show pos
+agentEntityShow (Object (Robot (Just Kid)) pos) = "Robot(Kid):" ++ show pos
 
 instance Eq Agent where
   a1 == a2 = entity a1 == entity a2
+
+(%==) :: [Agent] -> [Agent] -> Bool
+(%==) [] [] = True
+(%==) (a : as) (b : bs) = a == b && getTask a == getTask b && as %== bs
+(%==) _ _ = False
 
 instance Eq Solver where
   s1 == s2 = agent s1 == agent s2 && time s1 == time s2

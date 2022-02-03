@@ -125,4 +125,29 @@ taskDetectionTest =
     agnToSolver (agn, time) = Solver agn time
     baseBoard = newBoard 5 5
 
+parallelPathfindingSpec = describe "Test parallell pathfinding" $ do
+  it "Compare paralles vs sequential pathfinding" $
+    let robots = makeMany (Robot Nothing) [(0, i) | i <- [0 .. 30]]
+        kids = makeMany Kid [(15, i) | i <- [0 .. 30]]
+        dirts = makeMany Dirt [(2 * j + 1, i) | i <- [0 .. 30], j <- [1 .. 10]]
+        cribs = makeMany Crib [(30, i) | i <- [0 .. 30]]
+        board = newBoard 40 40 *++ (robots ++ kids ++ dirts ++ cribs)
+        agents = [Agent rob Nothing | rob <- robots]
+        targets = cribs
+
+        paths = [findObject board agent target calcType | (agent, target) <- zip agents targets]
+        pathsPar = findObjects board agents targets calcType
+     in do
+          print "Solving with parallel execution"
+          startPar <- getCurrentTime
+          pathsPar `shouldBe` pathsPar
+          endPar <- getCurrentTime
+          print ("Solverd in " ++ show (endPar `diffUTCTime` startPar) ++ " seconds")
+          print "Solving without parallel execution"
+          start <- getCurrentTime
+          paths `shouldBe` paths
+          end <- getCurrentTime
+          print ("Solverd in " ++ show (end `diffUTCTime` start) ++ " seconds")
+          pathsPar `shouldBe` paths
+
 calcType = ShortestPath

@@ -1,4 +1,5 @@
 import AgentSimulateSpec
+import ParallellPathfindingSpec
 import PathCalculationSpec
 import PathfindingSpec
 import TaskHandlingSpec
@@ -6,7 +7,6 @@ import Test.Hspec (hspec)
 import VisualSpec
 import WorldSimulateSpec
 import WorldSpec
-import ParallellPathfindingSpec
 
 main :: IO ()
 main = do
@@ -24,8 +24,6 @@ main = do
   hspec testKidMovement
   -- Task Pathfinding Specs
   hspec taskReachabilityTest
-  -- Parallel Pathfinding Tests
-  hspec taskDetectionTest
   -- Agent Pathfinding Specs
   hspec agentPathfindingTest
   -- Task Handling Specs
@@ -45,3 +43,6 @@ main = do
   -- Path Calculation Tests
   hspec bestRewardSpec
   hspec bestRewardPathfindingSpec
+  -- Parallel Pathfinding Tests
+  hspec taskDetectionTest
+  hspec parallelPathfindingSpec

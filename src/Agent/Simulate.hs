@@ -28,7 +28,7 @@ agentSim calcType board = loop board []
           ( updBoard,
             updMovedAgents,
             updNotMovedAgents
-            ) = moveAgents board movedAgents notMovedAssignedAgents calcType
+            ) = trace ("nma" ++ show notMovedAssignedAgents) moveAgents board movedAgents notMovedAssignedAgents calcType
        in if notMovedAgents %== updNotMovedAgents
             then (updBoard, updMovedAgents ++ updNotMovedAgents)
             else loop updBoard updMovedAgents updNotMovedAgents
@@ -42,24 +42,23 @@ moveAgents board movedAgents toMoveAgents calcType =
     g board [] [] = (board, [], [])
     g board (ag : ags) (path : paths)
       | null path =
-        let (resBoard, resMovedAg, resNotMovedAg) = g board ags paths
+        let (resBoard, resMovedAg, resNotMovedAg) = trace (show ag ++ " didnot found a path") g board ags paths
          in (resBoard, resMovedAg, unassingAgent ag : resNotMovedAg)
       | otherwise =
         let (resBoard, resMovedAg, resNotMovedAg) = g updBoard ags paths
          in (resBoard, updAg : resMovedAg, resNotMovedAg)
       where
-        action = head path
-        (updBoard, updAg) = agentApplyMove board ag action
+        (updBoard, updAg) = agentApplyMove board ag path
 
     -- Finding path for each agent and its objective using parallel execution
     paths = f toMoveAgents -- findTargets board toMoveAgents calcType
     f [] = []
     f (ag : ags)
-      | (isNothing . task) ag = [] : ps
+      | (isNothing . task) ag = trace (show ag ++ " has no path") [] : ps
       | otherwise = p `par` (ps `pseq` p : ps)
       where
         ps = f ags
-        agentlessBoard = removeActiveAgents board ag allAgents
+        agentlessBoard = removeActiveAgents board ag movedAgents
         p = findTarget agentlessBoard ag calcType
 
     -- helpers
@@ -79,8 +78,7 @@ moveAgentsOld board movedAgents (ag : agents) calcType =
             moveAgentsOld updBoard (updAgent : movedAgents) agents calcType
        in (rBoard, updAgent : rmovedAgents, rnotMovedAgents)
   where
-    (updBoard, updAgent) = agentApplyMove board ag act
-    act = head actions
+    (updBoard, updAgent) = agentApplyMove board ag actions
     actions =
       let path = findTarget board ag calcType
           agentlessBoard = removeActiveAgents board ag (movedAgents ++ agents)
@@ -88,21 +86,23 @@ moveAgentsOld board movedAgents (ag : agents) calcType =
             then findTarget agentlessBoard ag calcType
             else path
 
-agentApplyMove :: Board -> Agent -> Action Position -> (Board, Agent)
-agentApplyMove board agent action
+agentApplyMove :: Board -> Agent -> [Action Position] -> (Board, Agent)
+agentApplyMove board agent actions@(action : _)
   | robotBlock = (board, agent)
   | otherwise =
     let (updObj, updBoard) = localApplyMove board (entity agent) action
         updTask = case (action, (position . fromJust . getTask) agent) of
           (Clean x, y)
             | x == y -> Nothing
-            | otherwise -> task agent
+            | otherwise -> updAssignTasks
           (Drop x, y)
             | x == y -> Nothing
-            | otherwise -> task agent
-          _ -> task agent
-     in (updBoard, Agent updObj updTask)
+            | otherwise -> updAssignTasks
+          _ -> updAssignTasks
+     in trace ("ut: " ++ show updTask) (updBoard, Agent updObj updTask)
   where
+    -- Helpers!!!
+    updAssignTasks = Just (AssignedTask ((fromJust . getTask) agent) actions)
     objs = fromJust (board ! value action)
     robotBlock =
       value action /= (position . entity) agent

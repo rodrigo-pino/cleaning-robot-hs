@@ -34,7 +34,7 @@ type SeqAct = Seq (Object, Action Position, Board, Natural)
 
 type SeqActMem = Seq (Object, Action Position, Board, [Action Position], Natural)
 
-type PQueue = HashPSQ (Object, Action Position) Natural (Board, [Action Position])
+type PQueue = HashPSQ (Object, Action Position, [Action Position]) Natural Board
 
 type PossiblePaths = [([Action Position], Natural)]
 
@@ -96,11 +96,12 @@ searchAll calcType ((obj, act, board, cost) :<| queue) hashmap
 pathToTask :: Board -> Agent -> Object -> PathCalcType -> [Action Position]
 pathToTask board agentx targetx calcType =
   let obj = entity agentx
+      initialQueue :: PQueue
       initialQueue =
         PSQ.fromList
-          [ ( (obj, mov),
+          [ ( (obj, mov, []),
               actionCalc calcType board (Just targetx) 0 mov,
-              (board, [])
+              board
             )
             | mov <- moves obj board
           ]
@@ -143,13 +144,13 @@ pathfind calcType targetx pqueue hashmap
               `seq` newCost
               `seq` newBoard
               `seq` newPath
-              `seq` PSQ.insert (newObj, val) newCost (newBoard, newPath) acc
+              `seq` PSQ.insert (newObj, val, newPath) newCost newBoard acc
         )
         updPqueue
         nextMoves
 
     -- Extracting vars
-    ((obj, act), cost, (board, path)) = fromJust (PSQ.findMin pqueue)
+    ((obj, act, path), cost, board) = fromJust (PSQ.findMin pqueue)
     updPqueue = PSQ.deleteMin pqueue
 
     -- Helpers

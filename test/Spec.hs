@@ -43,6 +43,8 @@ main = do
   -- Path Calculation Tests
   hspec bestRewardSpec
   hspec bestRewardPathfindingSpec
-  -- Parallel Pathfinding Tests
-  hspec taskDetectionTest
-  hspec parallelPathfindingSpec
+  hspec noBlockCribsSpecs
+
+-- Parallel Pathfinding Tests
+-- hspec taskDetectionTest
+-- hspec parallelPathfindingSpec

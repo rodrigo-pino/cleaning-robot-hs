@@ -2,7 +2,9 @@ module PathCalculationSpec where
 
 import Agent.Logic.Pathfinding.Find
 import Agent.Logic.Pathfinding.PathCalculation
+import Agent.Logic.TaskHandling (assignTasks, getTasks)
 import Agent.Objects
+import Data.Maybe (fromJust)
 import Test.Hspec
 import Test.Tasty
 import Test.Tasty.Hspec
@@ -41,7 +43,7 @@ bestRewardSpec = describe "Best reward calculation are done correctly" $ do
         move = Move (Position 0 1)
      in actionCalc calcType board Nothing 500 move `shouldBe` 600
   where
-    calcType = BestReward
+    calcType = Balance
 
 bestRewardPathfindingSpec = describe "Pathfind works correctly with best reward" $ do
   it "Should find the path to the crib task" $
@@ -51,7 +53,7 @@ bestRewardPathfindingSpec = describe "Pathfind works correctly with best reward"
         board = newBoard 3 3 *++ [robot, kid, crib]
         ag = Agent robot Nothing
         pathShort = findObject board ag crib ShortestPath
-        pathBest = findObject board ag crib BestReward
+        pathBest = findObject board ag crib Balance
      in do
           length pathShort `shouldBe` 4
           length pathBest `shouldBe` 4
@@ -60,5 +62,30 @@ bestRewardPathfindingSpec = describe "Pathfind works correctly with best reward"
         dirt = make Dirt (2, 2)
         board = newBoard 3 3 *+ robot
         ag = Agent robot Nothing
-        path = findObject board ag dirt BestReward
+        path = findObject board ag dirt Balance
      in path `shouldBe` []
+
+noBlockCribsSpecs = describe "Never chooses a blocking crib as a Task" $ do
+  it "Should find the last crib as the best reward task" $
+    let robot = make (Robot (Just Kid)) (0, 0)
+        cribs@[c1, c2, c3] = makeMany Crib [(0, i) | i <- [1 .. 3]]
+        board = newBoard 1 4 *++ (robot : cribs)
+        ag = Agent robot Nothing
+        [resAg] = assignTasks board [ag] BalanceCrib
+     in (fromJust . getTask) resAg `shouldBe` c3
+  it "Should find the middle crib as the best reward task" $
+    let robot = make (Robot (Just Kid)) (19, 19)
+        cribs = makeMany Crib [(i, j) | i <- [5 .. 9], j <- [5 .. 9]]
+        board = newBoard 20 20 *++ (robot : cribs)
+        ag = Agent robot Nothing
+        target = make Crib (7, 7)
+        [resAg] = assignTasks board [ag] BalanceCrib
+     in (fromJust . getTask) resAg `shouldBe` target
+  it "Should find the cornered crib as the best reward task" $
+    let robot = make (Robot (Just Kid)) (0, 0)
+        cribs = makeMany Crib [(i, j) | i <- [5 .. 9], j <- [5 .. 9]]
+        board = newBoard 10 10 *++ (robot : cribs)
+        ag = Agent robot Nothing
+        target = make Crib (9, 9)
+        [resAg] = assignTasks board [ag] BalanceCrib
+     in (fromJust . getTask) resAg `shouldBe` target

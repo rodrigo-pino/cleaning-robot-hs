@@ -3,6 +3,8 @@ module Agent.Logic.Pathfinding.Find where
 import Agent.Logic.Pathfinding.Algorithm
 import Agent.Logic.Pathfinding.PathCalculation
 import Agent.Objects (Agent (..), Natural (..), Solver (..), Task (..), getTask)
+import Control.DeepSeq (deepseq)
+import Control.Parallel (par, pseq)
 import Data.Maybe (fromJust, isJust)
 import Debug.Trace (trace)
 import GHC.List (foldl')
@@ -31,6 +33,34 @@ findSolvers board tasks (ag : agents) calcType = findSolvers board updatedTasks 
                   then Task targetx (Solver ag (fromJust time) : solversx)
                   else taskx
       ]
+
+findSolversPar :: Board -> [Task] -> [Agent] -> PathCalcType -> [Task]
+findSolversPar board tasks agents calcType = updatedTasks
+  where
+    -- Task Updating
+    updatedTasks = g tasks
+    g [] = []
+    g (t : ts) = (solvers `deepseq` newTask) `par` (restTasks `pseq` newTask : restTasks)
+      where
+        -- recursion
+        restTasks = g ts
+        -- call logic
+        newTask = Task targetx solvers
+        targetx = target t
+        solvers =
+          [ Solver ag (fromJust time)
+            | (ag, rt) <- zip agents reachedTasks,
+              let time = lookup targetx rt,
+              isJust time
+          ]
+
+    -- Task Searching
+    reachedTasks = f agents
+    f [] = []
+    f (x : xs) = rt `par` rts `pseq` (rt : rts)
+      where
+        rt = reachableTasks (robotlessBoard board x) x calcType
+        rts = f xs
 
 findObject :: Board -> Agent -> Object -> PathCalcType -> [Action Position]
 findObject board ag targetx calcType =

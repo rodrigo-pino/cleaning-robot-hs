@@ -1,13 +1,16 @@
-{-# OPTIONS_GHC -Wno-missing-methods #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module World.Objects where
 
+import Control.DeepSeq (NFData)
 import Data.Hashable
 import Data.List (foldl', nub, sort)
 import Data.Maybe
 import Debug.Trace (trace)
+import GHC.Generics (Generic)
 
-data Position = Position {row :: Int, col :: Int}
+data Position = Position {row :: Int, col :: Int} deriving (Generic, NFData)
 
 data ObjectType
   = Crib
@@ -15,13 +18,13 @@ data ObjectType
   | Kid
   | Obstacle
   | Robot {carry :: Maybe ObjectType}
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Generic, NFData)
 
-data Object = Object {typex :: ObjectType, position :: Position}
+data Object = Object {typex :: ObjectType, position :: Position} deriving (Generic, NFData)
 
 data Board = Board {elems :: [Object], maxRows :: Int, maxCols :: Int}
 
-data Action a = Clean a | Drop a | Grab a | Move a | Push a a deriving (Eq, Show)
+data Action a = Clean a | Drop a | Grab a | Move a | Push a a deriving (Eq, Show, Generic, NFData)
 
 instance Hashable ObjectType where
   hashWithSalt salt objType = (hash . show) objType

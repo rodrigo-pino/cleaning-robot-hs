@@ -1,18 +1,23 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
+
 module Agent.Objects where
 
+import Control.DeepSeq (NFData)
 import Data.Maybe (fromJust, isNothing)
+import GHC.Generics (Generic)
 import World.Objects
 
 data AssignedTask = AssignedTask {destinaton :: Object, actions :: [Action Position]}
-  deriving (Show)
+  deriving (Show, Generic, NFData)
 
-data Agent = Agent {entity :: Object, task :: Maybe AssignedTask}
+data Agent = Agent {entity :: Object, task :: Maybe AssignedTask} deriving (Generic, NFData)
 
-data Solver = Solver {agent :: Agent, time :: Natural} deriving (Show)
+data Solver = Solver {agent :: Agent, time :: Natural} deriving (Show, Generic, NFData)
 
 data Task = Task {target :: Object, solvers :: [Solver]} deriving (Show)
 
-data Natural = Natural Int | Infinite deriving (Show)
+data Natural = Natural Int | Infinite deriving (Show, Generic, NFData)
 
 instance Show Agent where
   show (Agent entity Nothing) = "Agent: " ++ show entity ++ " Unassigned"

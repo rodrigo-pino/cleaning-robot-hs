@@ -16,10 +16,10 @@ bestRewardSpec = describe "Best reward calculation are done correctly" $ do
         board = newBoard 10 10 *++ (crib : robots ++ kids)
         moves@[m1, m2, m3] = [Drop (Position x x) | x <- [0, 5, 9]]
      in do
-          actionCalc calcType board 1000 m1 `shouldBe` 1100
-          actionCalc calcType board 1000 m2 `shouldBe` 1500
-          actionCalc calcType board 3000 m3 `shouldBe` 1500
-          actionCalc calcType board 700 m3 `shouldBe` -300
+          actionCalc calcType board Nothing 1000 m1 `shouldBe` 1100
+          actionCalc calcType board Nothing 1000 m2 `shouldBe` 1500
+          actionCalc calcType board Nothing 3000 m3 `shouldBe` 1500
+          actionCalc calcType board Nothing 700 m3 `shouldBe` -300
   it "Should have the correct value after grabbing a kid" $
     let robots = makeMany (Robot Nothing) [(i, i) | i <- [0, 4]]
         kids = makeMany Kid [(i, i + 1) | i <- [0, 4]]
@@ -27,19 +27,19 @@ bestRewardSpec = describe "Best reward calculation are done correctly" $ do
         board = newBoard 7 7 *++ (robots ++ kids ++ surroundKids)
         moves@[m1, m2] = [Grab (Position x (x + 1)) | x <- [0, 4]]
      in do
-          actionCalc calcType board 1000 m1 `shouldBe` 1100
-          actionCalc calcType board 1000 m2 `shouldBe` 700
+          actionCalc calcType board Nothing 1000 m1 `shouldBe` 1100
+          actionCalc calcType board Nothing 1000 m2 `shouldBe` 700
   it "Should have the correct value after cleaning" $
     let robot = make (Robot Nothing) (0, 0)
         dirt = make Dirt (0, 0)
         board = newBoard 5 5 *++ [robot, dirt]
         move = Clean (Position 0 0)
-     in actionCalc calcType board 500 move `shouldBe` 300
+     in actionCalc calcType board Nothing 500 move `shouldBe` 500
   it "Should have the correct value after moving" $
     let robot = make (Robot Nothing) (0, 0)
         board = newBoard 3 3 *+ robot
         move = Move (Position 0 1)
-     in actionCalc calcType board 500 move `shouldBe` 600
+     in actionCalc calcType board Nothing 500 move `shouldBe` 600
   where
     calcType = BestReward
 
@@ -53,5 +53,12 @@ bestRewardPathfindingSpec = describe "Pathfind works correctly with best reward"
         pathShort = findObject board ag crib ShortestPath
         pathBest = findObject board ag crib BestReward
      in do
-          print pathShort
-          print pathBest
+          length pathShort `shouldBe` 4
+          length pathBest `shouldBe` 4
+  it "Should get an empty path if target task does not exists" $
+    let robot = make (Robot Nothing) (0, 0)
+        dirt = make Dirt (2, 2)
+        board = newBoard 3 3 *+ robot
+        ag = Agent robot Nothing
+        path = findObject board ag dirt BestReward
+     in path `shouldBe` []

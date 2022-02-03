@@ -113,5 +113,20 @@ agentPathfindingTest = describe "Test agent correct pathfinding to assigned targ
         ag = Agent robot (Just (AssignedTask d2 []))
         path = findTarget board ag calcType
      in path `shouldBe` [Move (Position 0 5), Clean (Position 0 5)]
+  it "Should find the path to the dirt" $
+    let obstacles = makeMany Obstacle [(i, j) | i <- [1 .. 4], j <- [0, 1, 3, 4]]
+        dirts@[d1, d2, d3] = makeMany Dirt [(0, j) | j <- [0, 2, 4]]
+        robots@[r1, r2, r3] = makeMany (Robot Nothing) [(0, 1), (2, 2), (5, 4)]
+        board = newBoard 6 5 *++ (obstacles ++ dirts ++ [r1, r2, r3])
+        ag = Agent r2 (Just (AssignedTask d3 []))
+        path = findTarget board ag calcType
+        expPath =
+          [ Move (Position 1 2),
+            Move (Position 0 2),
+            Move (Position 0 3),
+            Move (Position 0 4),
+            Clean (Position 0 4)
+          ]
+     in path `shouldBe` expPath
 
 calcType = ShortestPath

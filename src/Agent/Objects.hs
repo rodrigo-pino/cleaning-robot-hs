@@ -8,7 +8,7 @@ import Data.Maybe (fromJust, isNothing)
 import GHC.Generics (Generic)
 import World.Objects
 
-data AgentType = Bold | Cautious
+data AgentType = Bold | Cautious deriving (Eq)
 
 data AssignedTask = AssignedTask {destinaton :: Object, actions :: [Action Position]}
   deriving (Show, Generic, NFData)

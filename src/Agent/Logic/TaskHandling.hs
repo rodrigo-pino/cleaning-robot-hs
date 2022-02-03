@@ -101,6 +101,7 @@ minimumCost costMatrix currentIndex = fst (foldl' f ((Infinite, (-1, -1)), (0, 0
     hardNotEq v (x : xs) = fst v /= fst x && snd v /= snd x && hardNotEq v xs
 
 -- Get tasks agents and how they will be split, and returns new tasks
+-- Remove calctype when final refactoring
 parseTaskDivision :: Board -> [Task] -> [Agent] -> [(Int, Int)] -> PathCalcType -> [Agent]
 parseTaskDivision board tasks agents assignations calcType =
   assign [0 .. length agents - 1] agents

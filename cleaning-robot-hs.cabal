@@ -43,9 +43,12 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , deepseq
     , hashable
     , hashmap
     , matrix
+    , parallel
+    , psqueues
     , random
     , unordered-containers
     , vector
@@ -62,9 +65,12 @@ executable cleaning-robot-hs-exe
       base >=4.7 && <5
     , cleaning-robot-hs
     , containers
+    , deepseq
     , hashable
     , hashmap
     , matrix
+    , parallel
+    , psqueues
     , random
     , unordered-containers
     , vector
@@ -75,6 +81,7 @@ test-suite cleaning-robot-hs-test
   main-is: Spec.hs
   other-modules:
       AgentSimulateSpec
+      ParallellPathfindingSpec
       PathCalculationSpec
       PathfindingSpec
       TaskHandlingSpec
@@ -89,13 +96,17 @@ test-suite cleaning-robot-hs-test
       base >=4.7 && <5
     , cleaning-robot-hs
     , containers
+    , deepseq
     , hashable
     , hashmap
     , hspec
     , matrix
+    , parallel
+    , psqueues
     , random
     , tasty
     , tasty-hspec
+    , time
     , unordered-containers
     , vector
   default-language: Haskell2010

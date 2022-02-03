@@ -34,7 +34,7 @@ agentApplyMoveTest = describe "Move an agent through the board" $ do
     let move = Move (Position 2 1)
         dirt = make Dirt (0, 2)
         agent = mockAgent mainR [move] dirt
-        (updatedBoard, updatedAgent) = agentApplyMove (board *+ mainR) agent move
+        (updatedBoard, updatedAgent) = agentApplyMove (board *+ mainR) agent [move]
         expectedR = make (Robot Nothing) (2, 1)
         (expectedBoard, expectedAgent) = (board *+ expectedR, mockAgent expectedR [move] dirt)
      in do
@@ -45,7 +45,7 @@ agentApplyMoveTest = describe "Move an agent through the board" $ do
         dirt = make Dirt (0, 2)
         agent = mockAgent mainR [move] dirt
         blockade = makeMany (Robot Nothing) [(3, 2), (2, 3), (1, 2), (2, 1)]
-        (updatedBoard, updatedAgent) = agentApplyMove (board *++ (mainR : blockade)) agent move
+        (updatedBoard, updatedAgent) = agentApplyMove (board *++ (mainR : blockade)) agent [move]
         (expectedBoard, expectedAgent) = (board *++ (mainR : blockade), mockAgent mainR [move] dirt)
      in do
           updatedBoard `shouldBe` expectedBoard
@@ -54,7 +54,7 @@ agentApplyMoveTest = describe "Move an agent through the board" $ do
     let move = Clean (Position 2 2)
         dirt = make Dirt (2, 2)
         agent = mockAgent mainR [move] dirt
-        (updatedBoard, updatedAgent) = agentApplyMove (board *++ [mainR, dirt]) agent move
+        (updatedBoard, updatedAgent) = agentApplyMove (board *++ [mainR, dirt]) agent [move]
         (expectedBoard, expectedAgent) = (board *+ mainR, mockAgent mainR [move] dirt)
      in do
           updatedBoard `shouldBe` expectedBoard
@@ -65,7 +65,7 @@ agentApplyMoveTest = describe "Move an agent through the board" $ do
         kid = make Kid (2, 2)
         carryR = make (Robot (Just Kid)) (2, 2)
         agent = mockAgent carryR [move] crib
-        (updatedBoard, updatedAgent) = agentApplyMove (board *++ [carryR, crib]) agent move
+        (updatedBoard, updatedAgent) = agentApplyMove (board *++ [carryR, crib]) agent [move]
         (expectedBoard, expectedAgent) = (board *++ [mainR, crib, kid], Agent mainR Nothing)
      in do
           updatedAgent `shouldBe` expectedAgent
@@ -76,7 +76,7 @@ agentApplyMoveTest = describe "Move an agent through the board" $ do
         crib = make Crib (2, 2)
         carryR = make (Robot (Just Kid)) (2, 1)
         agent = mockAgent mainR [move] crib
-        (updatedBoard, updatedAgent) = agentApplyMove (board *++ [mainR, kid]) agent move
+        (updatedBoard, updatedAgent) = agentApplyMove (board *++ [mainR, kid]) agent [move]
         (expectedBoard, expectedAgent) = (board *++ [carryR], mockAgent carryR [move] crib)
      in do
           updatedAgent `shouldBe` expectedAgent
@@ -85,7 +85,7 @@ agentApplyMoveTest = describe "Move an agent through the board" $ do
     let dirt = make Dirt (2, 2)
         move = Clean (Position 2 2)
         agent = mockAgent mainR [move] dirt
-        (updBoard, updAg) = agentApplyMove (board *++ [mainR, dirt]) agent move
+        (updBoard, updAg) = agentApplyMove (board *++ [mainR, dirt]) agent [move]
         (expBoard, expAg) = (board *++ [mainR], Agent mainR Nothing)
      in do
           updBoard `shouldBe` expBoard
@@ -175,7 +175,7 @@ agentSimTest = describe "Agents should do all tasks" $ do
         (resultBoard3, resultAgent3) = loop 2 (resultBoard2, resultAgent2)
      in do
           getByType resultBoard1 Dirt `shouldBe` [dirt1, dirt3]
-          getByType resultBoard2 Dirt `shouldBe` [dirt1]
+          getByType resultBoard2 Dirt `shouldBe` [dirt3]
           getByType resultBoard3 Dirt `shouldBe` []
   it "Should move the agents to do the tasks #4" $
     let obstacles = makeMany Obstacle [(i, j) | i <- [1, 2, 3], j <- [0, 1, 3, 4]]
@@ -188,7 +188,7 @@ agentSimTest = describe "Agents should do all tasks" $ do
         (resultBoard3, resultAgent3) = loop 2 (resultBoard2, resultAgent2)
      in do
           getByType resultBoard1 Dirt `shouldBe` [dirt1, dirt3]
-          getByType resultBoard2 Dirt `shouldBe` [dirt1]
+          getByType resultBoard2 Dirt `shouldBe` [dirt3]
           getByType resultBoard3 Dirt `shouldBe` []
   it "Should move the agents to the tasks #5" $
     let robots = makeMany (Robot Nothing) [(0, i) | i <- [0 .. 3]]
@@ -199,13 +199,6 @@ agentSimTest = describe "Agents should do all tasks" $ do
         (resultBoard2, resultAgent2) = loop 3 (resultBoard1, resultAgent1)
         (resultBoard3, resultAgent3) = loop 3 (resultBoard2, resultAgent2)
      in do
-          printState resultBoard1
-          print resultAgent1
-          printState resultBoard2
-          print resultAgent2
-          printState resultBoard3
-          print resultAgent3
-
           getByType resultBoard1 Dirt `shouldNotBe` dirts
           getByType resultBoard2 Dirt `shouldNotBe` []
   where

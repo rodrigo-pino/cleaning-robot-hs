@@ -102,7 +102,37 @@ minimumCost costMatrix currentIndex = fst (foldl' f ((Infinite, (-1, -1)), (0, 0
 
 -- Get tasks agents and how they will be split, and returns new tasks
 parseTaskDivision :: Board -> [Task] -> [Agent] -> [(Int, Int)] -> PathCalcType -> [Agent]
-parseTaskDivision board tasks agents assignation calcType =
+parseTaskDivision board tasks agents assignations calcType =
+  assign [0 .. length agents - 1] agents
+  where
+    assign [] [] = []
+    assign (i : is) (ag : ags)
+      | isJust (task ag) || taskIndex == -1 = ag : as
+      | otherwise = a : as
+      where
+        -- recursion
+        as = assign is ags
+        -- logic
+        a =
+          Agent
+            { entity = entity ag,
+              task =
+                Just
+                  AssignedTask
+                    { destinaton = target designatedTask,
+                      actions = []
+                    }
+            }
+        taskIndex = searchTask i assignations
+        designatedTask = tasks !! taskIndex
+
+    searchTask i [] = -1
+    searchTask i (x : xs)
+      | snd x == i = fst x
+      | otherwise = searchTask i xs
+
+parseTaskDivisionOld :: Board -> [Task] -> [Agent] -> [(Int, Int)] -> PathCalcType -> [Agent]
+parseTaskDivisionOld board tasks agents assignations calcType =
   zipWith (curry assign) [0 .. length agents - 1] agents
   where
     assign (i, agent)
@@ -119,7 +149,7 @@ parseTaskDivision board tasks agents assignation calcType =
           }
       where
         assignedTask = task agent
-        taskIndex = searchTask i assignation
+        taskIndex = searchTask i assignations
         designatedTask = tasks !! taskIndex
         path = findObject board agent (target designatedTask) calcType
 

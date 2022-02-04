@@ -24,27 +24,25 @@ runSimulation simSelect shuffleTime agentType calcType =
 simulation :: Board -> [Agent] -> Int -> Int -> StdGen -> AgentType -> PathCalcType -> IO ()
 simulation board agents times shuffleT g agentType calcType =
   let (boardByAgents, updatedAgents) = agentSim calcType board agents
+      timeToVar = times `mod` shuffleT
       (boardByWorld, newG) =
-        if times `mod` shuffleT == 0
+        if timeToVar == 0
           then worldSim boardByAgents g
           else (boardByAgents, g)
       nextAgents =
-        if times `mod` shuffleT == 0 && agentType == Bold
+        if timeToVar == 0 && agentType == Cautious
           then agentInit boardByWorld
           else updatedAgents
    in do
+        print (if timeToVar == 0 then "World moves" else show timeToVar)
         simOutput boardByWorld times
         endSim <- endSim boardByWorld
-        print updatedAgents
-        print (times `mod` shuffleT)
         if not endSim
           then simulation boardByWorld nextAgents (times + 1) shuffleT newG agentType calcType
           else print "Simulation Ended"
 
 simOutput board times = do
   print ("Time: " ++ show times)
-  -- print "Agent move:"
-  -- printState boardByAgents
   print ("Dirtiness: " ++ show (calculateDirtiness board) ++ "%")
   printState board
   print ""

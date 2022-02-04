@@ -14,9 +14,29 @@ import World.Objects
 type Acc = ((Natural, (Int, Int)), (Int, Int))
 
 assignTasks :: Board -> [Agent] -> PathCalcType -> [Agent]
-assignTasks board agents calcType = getOptimalTaskDivison board tasks agents calcType
+assignTasks board agents calcType = getOptimalTaskDivison board tasks updAgents calcType
   where
-    tasks = findSolvers board (getTasks board agents) agents calcType
+    tasks = findSolvers board (getTasks board updAgents) updAgents calcType
+    -- If an agent mission is already completed, unnasign
+    updAgents = unassingCompleted agents
+    unassingCompleted [] = []
+    unassingCompleted (ag : ags)
+      | isNothing (task ag) = ag : ucs
+      | otherwise =
+        if validTarget
+          then ag : ucs
+          else unassingAgent ag : ucs
+      where
+        -- recursion
+        ucs = unassingCompleted ags
+        -- logic
+        target = (fromJust . getTask) ag
+        tPos = position target
+        cell = fromJust (board ! tPos)
+        validTarget =
+          case typex target of
+            Dirt -> Dirt `elem` cell
+            Crib -> Crib `elem` cell && Kid `notElem` cell
 
 getTasks :: Board -> [Agent] -> [Task]
 getTasks board agents = [tsk | tsk <- tasks, target tsk `notElem` takenTasks]

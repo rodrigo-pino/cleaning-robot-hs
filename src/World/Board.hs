@@ -108,10 +108,10 @@ calculateDirtiness board =
    in (fromIntegral totalDirts / fromIntegral totalBlocks) * 100
 
 allKidsInCribs board =
-  let cribs = getByType board Crib
+  let kids = getByType board Kid
    in and
         [ r
-          | crib <- cribs,
-            let pos = position crib,
-            let r = Kid `elem` fromJust (board ! pos)
+          | kid <- kids,
+            let pos = position kid,
+            let r = Crib `elem` fromJust (board ! pos)
         ]

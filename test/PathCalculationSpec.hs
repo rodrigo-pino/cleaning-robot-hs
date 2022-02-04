@@ -107,7 +107,7 @@ noBlockCribsSpecs = describe "Never chooses a blocking crib as a Task" $ do
         agents = agentInit board
         resAgs = assignTasks board agents (fvalues board)
      in do
-          print resAgs
+          -- print resAgs
           3 `shouldBe` 3
   where
     fvalues board = fillValues board (BalanceCrib Nothing)

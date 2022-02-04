@@ -180,9 +180,7 @@ assignTaskTest = describe "Correct assignation of tasks to agents" $ do
         agents = [Agent rob Nothing | rob <- robots]
         resultAgents = assignTasks board agents calcType
         resultDest = map destinaton (mapMaybe task resultAgents)
-     in do
-          print resultAgents
-          length (resultDest `intersect` dirts) `shouldBe` 3
+     in length (resultDest `intersect` dirts) `shouldBe` 3
   it "Should unassign agents with mission already completed" $
     let dirt = make Dirt (0, 1)
         robot = make (Robot Nothing) (0, 0)

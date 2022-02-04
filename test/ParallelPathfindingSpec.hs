@@ -1,4 +1,4 @@
-module ParallellPathfindingSpec where
+module ParallelPathfindingSpec where
 
 import Agent.Logic.Pathfinding.Find
 import Agent.Logic.Pathfinding.PathCalculation

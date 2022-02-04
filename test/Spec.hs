@@ -1,5 +1,5 @@
 import AgentSimulateSpec
-import ParallellPathfindingSpec
+import ParallelPathfindingSpec
 import PathCalculationSpec
 import PathfindingSpec
 import TaskHandlingSpec

@@ -2,9 +2,9 @@ name: cleaning-robot-hs
 version: 0.1.0.0
 github: "githubuser/cleaning-robot-hs"
 license: BSD3
-author: "Author name here"
+author: "Rodirgo Pino"
 maintainer: "example@example.com"
-copyright: "2022 Author name here"
+copyright: "2022 Rodrigo Pino"
 
 extra-source-files:
   - README.md
@@ -43,6 +43,7 @@ executables:
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
+      - -O2
     dependencies:
       - cleaning-robot-hs
 

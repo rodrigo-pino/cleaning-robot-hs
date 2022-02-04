@@ -4,6 +4,8 @@ import Agent.Logic.Pathfinding.Find
 import Agent.Logic.Pathfinding.PathCalculation
 import Agent.Logic.TaskHandling (assignTasks, getTasks)
 import Agent.Objects
+import Agent.Simulate (agentInit)
+import BoardBox (boardSelect)
 import Data.Maybe (fromJust)
 import Test.Hspec
 import Test.Tasty
@@ -71,7 +73,7 @@ noBlockCribsSpecs = describe "Never chooses a blocking crib as a Task" $ do
         cribs@[c1, c2, c3] = makeMany Crib [(0, i) | i <- [1 .. 3]]
         board = newBoard 1 4 *++ (robot : cribs)
         ag = Agent robot Nothing
-        [resAg] = assignTasks board [ag] BalanceCrib
+        [resAg] = assignTasks board [ag] (fvalues board)
      in (fromJust . getTask) resAg `shouldBe` c3
   it "Should find the middle crib as the best reward task" $
     let robot = make (Robot (Just Kid)) (19, 19)
@@ -79,7 +81,7 @@ noBlockCribsSpecs = describe "Never chooses a blocking crib as a Task" $ do
         board = newBoard 20 20 *++ (robot : cribs)
         ag = Agent robot Nothing
         target = make Crib (7, 7)
-        [resAg] = assignTasks board [ag] BalanceCrib
+        [resAg] = assignTasks board [ag] (fvalues board)
      in (fromJust . getTask) resAg `shouldBe` target
   it "Should find the cornered crib as the best reward task" $
     let robot = make (Robot (Just Kid)) (0, 0)
@@ -87,5 +89,25 @@ noBlockCribsSpecs = describe "Never chooses a blocking crib as a Task" $ do
         board = newBoard 10 10 *++ (robot : cribs)
         ag = Agent robot Nothing
         target = make Crib (9, 9)
-        [resAg] = assignTasks board [ag] BalanceCrib
+        [resAg] = assignTasks board [ag] (fvalues board)
      in (fromJust . getTask) resAg `shouldBe` target
+  it "Should find the last crib as the best reward task" $
+    let robot = make (Robot Nothing) (0, 250)
+        kids = makeMany Kid [(0, i) | i <- [0 .. 10]]
+        cribs = makeMany Crib [(0, i) | i <- [350 .. 499]]
+        board = newBoard 1 500 *++ (kids ++ robot : cribs)
+        target = make Crib (0, 499)
+        ag = Agent robot Nothing
+        [resAg] = assignTasks board [ag] (fvalues board)
+     in do
+          (fromJust . getTask) resAg `shouldBe` target
+
+  it "Shoudl assign each agent to the best task" $
+    let board = boardSelect 3
+        agents = agentInit board
+        resAgs = assignTasks board agents (fvalues board)
+     in do
+          print resAgs
+          3 `shouldBe` 3
+  where
+    fvalues board = fillValues board (BalanceCrib Nothing)

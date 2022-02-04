@@ -33,11 +33,11 @@ boardSelect num =
                   ++ [(i, j) | i <- [0 .. 4] ++ [8 .. 11], j <- [3, 8]]
               )
        in worldInit 12 12 (robots ++ kids ++ cribs ++ obstacles)
-    2 ->
+    11 ->
       let board1 = boardSelect 1
           dirts = makeMany Dirt [(6, j) | j <- [0 .. 11]]
        in board1 *++ dirts
-    3 ->
+    2 ->
       let robots = makeMany (Robot Nothing) [(i, 0) | i <- [12 .. 15]]
           kids = makeMany Kid [(i, j) | i <- [4 .. 11], let j = 16 + i]
           cribs = makeMany Crib [((i * 2) + 1, 31) | i <- [0 .. 7]]
@@ -46,7 +46,7 @@ boardSelect num =
               Obstacle
               ([(i, 1) | i <- [1 .. 15]] ++ [(i, 3) | i <- [0 .. 12]])
        in worldInit 16 32 (robots ++ kids ++ cribs ++ obstacles)
-    4 ->
+    22 ->
       let board3 = boardSelect 3
           dirts =
             makeMany
@@ -57,4 +57,15 @@ boardSelect num =
                   ++ [(i, 3) | i <- [13 .. 15]]
               )
        in board3 *++ dirts
+    3 ->
+      let robots@[r1, r2, r3] = makeMany (Robot Nothing) [(7, 0), (7, 11), (4, 6)]
+          cribs = makeMany Crib [(i, j) | i <- [0 .. 3], j <- [4 .. 7]]
+          obstacles = makeMany Obstacle [(i, j) | j <- [0 .. 3] ++ [8 .. 11], i <- [8 .. 11]]
+          kids = makeMany Kid [(i, j) | j <- [4 .. 7], i <- [8 .. 11]]
+       in worldInit 12 12 (robots ++ cribs ++ obstacles ++ kids)
+    33 ->
+      let board3 = boardSelect 3
+          cribs = makeMany Crib ([(i, j) | i <- [0 .. 3], j <- [3, 8]] ++ [(4, j) | j <- [4 .. 7]])
+          kids = makeMany Kid ([(i, j) | i <- [0 .. 3], j <- [0, 11]] ++ [(6, j) | j <- [4 .. 7]])
+       in board3 *++ (cribs ++ kids)
     _ -> error ("No board defined for num " ++ show num)

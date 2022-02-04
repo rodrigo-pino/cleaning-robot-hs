@@ -44,7 +44,6 @@ main = do
   hspec bestRewardSpec
   hspec bestRewardPathfindingSpec
   hspec noBlockCribsSpecs
-
--- Parallel Pathfinding Tests
--- hspec taskDetectionTest
--- hspec parallelPathfindingSpec
+  -- Parallel Pathfinding Tests
+  hspec taskDetectionTest
+  hspec parallelPathfindingSpec

@@ -38,23 +38,23 @@ boardSelect num =
           dirts = makeMany Dirt [(6, j) | j <- [0 .. 11]]
        in board1 *++ dirts
     2 ->
-      let robots = makeMany (Robot Nothing) [(i, 0) | i <- [12 .. 15]]
-          kids = makeMany Kid [(i, j) | i <- [4 .. 11], let j = 16 + i]
-          cribs = makeMany Crib [((i * 2) + 1, 31) | i <- [0 .. 7]]
+      let robots = makeMany (Robot Nothing) [(i, 0) | i <- [8 .. 11]]
+          kids = makeMany Kid [(i, j) | i <- [2 .. 9], let j = 3 + i]
+          cribs = makeMany Crib [(i, 15) | i <- [0 .. 7]]
           obstacles =
             makeMany
               Obstacle
-              ([(i, 1) | i <- [1 .. 15]] ++ [(i, 3) | i <- [0 .. 12]])
-       in worldInit 16 32 (robots ++ kids ++ cribs ++ obstacles)
+              ([(i, 1) | i <- [1 .. 11]] ++ [(i, 3) | i <- [0 .. 9]])
+       in worldInit 12 16 (robots ++ kids ++ cribs ++ obstacles)
     22 ->
-      let board3 = boardSelect 3
+      let board3 = boardSelect 2
           dirts =
             makeMany
               Dirt
               ( (0, 1) :
                 [(i, 0) | i <- [0 .. 11]]
-                  ++ [(i, 2) | i <- [0 .. 15]]
-                  ++ [(i, 3) | i <- [13 .. 15]]
+                  ++ [(i, 2) | i <- [0 .. 11]]
+                  ++ [(i, 3) | i <- [10 .. 11]]
               )
        in board3 *++ dirts
     3 ->

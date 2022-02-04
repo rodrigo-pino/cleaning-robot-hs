@@ -10,6 +10,7 @@ import Debug.Trace (trace)
 import Test.Hspec
 import Test.Tasty
 import Test.Tasty.Hspec
+import Visual (printState)
 import World.Board
 import World.Objects
 
@@ -128,5 +129,20 @@ agentPathfindingTest = describe "Test agent correct pathfinding to assigned targ
             Clean (Position 0 4)
           ]
      in path `shouldBe` expPath
+  it "Should find the path to the crib" $
+    let robot = make (Robot Nothing) (0, 1)
+        kid = make Kid (0, 0)
+        cribs@[c1, c2, c3] = makeMany Crib [(0, i) | i <- [2 .. 4]]
+        board = newBoard 1 5 *++ (kid : robot : cribs)
+        ag = Agent robot Nothing
+        path = findObject board ag c3 calcType
+        expPath =
+          [ Grab (Position 0 0),
+            Move (Position 0 2),
+            Move (Position 0 4),
+            Drop (Position 0 4)
+          ]
+     in do
+          path `shouldBe` expPath
 
 calcType = ShortestPath

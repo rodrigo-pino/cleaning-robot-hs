@@ -11,15 +11,15 @@ import GHC.List (foldl')
 import World.Objects (Action (..), Board (..), Object (..), ObjectType (..), Position (..))
 import qualified World.Objects as WO
 
-findSolvers :: Board -> [Task] -> [Agent] -> PathCalcType -> [Task]
-findSolvers _ tasks [] _ =
+findSolversOld :: Board -> [Task] -> [Agent] -> PathCalcType -> [Task]
+findSolversOld _ tasks [] _ =
   [ Task {target = targetx, solvers = reverse solversx}
     | taskx <- tasks,
       let targetx = target taskx,
       let solversx = solvers taskx,
       not (null solversx)
   ]
-findSolvers board tasks (ag : agents) calcType = findSolvers board updatedTasks agents calcType
+findSolversOld board tasks (ag : agents) calcType = findSolversOld board updatedTasks agents calcType
   where
     foundTasks = reachableTasks (robotlessBoard board ag) ag calcType
     updatedTasks =
@@ -34,8 +34,8 @@ findSolvers board tasks (ag : agents) calcType = findSolvers board updatedTasks 
                   else taskx
       ]
 
-findSolversPar :: Board -> [Task] -> [Agent] -> PathCalcType -> [Task]
-findSolversPar board tasks agents calcType = updatedTasks
+findSolvers :: Board -> [Task] -> [Agent] -> PathCalcType -> [Task]
+findSolvers board tasks agents calcType = updatedTasks
   where
     -- Task Updating
     updatedTasks = g tasks

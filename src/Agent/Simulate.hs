@@ -5,6 +5,7 @@ import Agent.Logic.Pathfinding.Find (findTarget, findTargets)
 import Agent.Logic.Pathfinding.PathCalculation
 import Agent.Logic.TaskHandling (assignTasks)
 import Agent.Objects
+import Control.DeepSeq (deepseq)
 import Control.Parallel (par, pseq)
 import Data.Maybe (fromJust, isJust, isNothing)
 import Debug.Trace (trace)
@@ -24,14 +25,16 @@ agentSim calcType board = loop board []
       let notMovedAssignedAgents =
             filter
               (`elem` notMovedAgents)
-              (assignTasks board (movedAgents ++ notMovedAgents) calcType)
+              (assignTasks board (movedAgents ++ notMovedAgents) fillCalcType)
           ( updBoard,
             updMovedAgents,
             updNotMovedAgents
-            ) = trace ("nma" ++ show notMovedAssignedAgents) moveAgents board movedAgents notMovedAssignedAgents calcType
+            ) = moveAgents board movedAgents notMovedAssignedAgents fillCalcType
        in if notMovedAgents %== updNotMovedAgents
             then (updBoard, updMovedAgents ++ updNotMovedAgents)
             else loop updBoard updMovedAgents updNotMovedAgents
+      where
+        fillCalcType = fillValues board calcType
 
 moveAgents :: Board -> [Agent] -> [Agent] -> PathCalcType -> (Board, [Agent], [Agent])
 moveAgents board movedAgents toMoveAgents calcType =
@@ -42,7 +45,7 @@ moveAgents board movedAgents toMoveAgents calcType =
     g board [] [] = (board, [], [])
     g board (ag : ags) (path : paths)
       | null path =
-        let (resBoard, resMovedAg, resNotMovedAg) = trace (show ag ++ " didnot found a path") g board ags paths
+        let (resBoard, resMovedAg, resNotMovedAg) = g board ags paths
          in (resBoard, resMovedAg, unassingAgent ag : resNotMovedAg)
       | otherwise =
         let (resBoard, resMovedAg, resNotMovedAg) = g updBoard ags paths
@@ -54,7 +57,7 @@ moveAgents board movedAgents toMoveAgents calcType =
     paths = f toMoveAgents -- findTargets board toMoveAgents calcType
     f [] = []
     f (ag : ags)
-      | (isNothing . task) ag = trace (show ag ++ " has no path") [] : ps
+      | (isNothing . task) ag = [] : ps
       | otherwise = p `par` (ps `pseq` p : ps)
       where
         ps = f ags
@@ -99,7 +102,7 @@ agentApplyMove board agent actions@(action : _)
             | x == y -> Nothing
             | otherwise -> updAssignTasks
           _ -> updAssignTasks
-     in trace ("ut: " ++ show updTask) (updBoard, Agent updObj updTask)
+     in (updBoard, Agent updObj updTask)
   where
     -- Helpers!!!
     updAssignTasks = Just (AssignedTask ((fromJust . getTask) agent) actions)

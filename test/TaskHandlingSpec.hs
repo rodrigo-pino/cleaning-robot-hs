@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
-
 module TaskHandlingSpec where
 
 import Agent.Logic.Pathfinding.Find
@@ -8,7 +6,7 @@ import Agent.Logic.TaskHandling
 import Agent.Objects
 import Data.List (intersect, sort)
 import qualified Data.Matrix as M
-import Data.Maybe (fromJust, mapMaybe)
+import Data.Maybe (fromJust, isNothing, mapMaybe)
 import Debug.Trace (trace)
 import Test.Hspec
 import Test.Tasty
@@ -185,6 +183,13 @@ assignTaskTest = describe "Correct assignation of tasks to agents" $ do
      in do
           print resultAgents
           length (resultDest `intersect` dirts) `shouldBe` 3
+  it "Should unassign agents with mission already completed" $
+    let dirt = make Dirt (0, 1)
+        robot = make (Robot Nothing) (0, 0)
+        board = newBoard 3 3 *+ robot
+        ag = mockAgent robot [Move (Position 0 1), Clean (Position 0 1)] dirt
+        [resAg] = assignTasks board [ag] calcType
+     in isNothing (task resAg) `shouldBe` True
   where
     mockAgent :: Object -> [Action Position] -> Object -> Agent
     mockAgent obj [] _ = Agent obj Nothing

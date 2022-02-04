@@ -34,7 +34,7 @@ simulation board agents times shuffleT g agentType calcType =
           else updatedAgents
    in do
         simOutput boardByWorld times
-        endSim <- endSim board
+        endSim <- endSim boardByWorld
         print updatedAgents
         print (times `mod` shuffleT)
         if not endSim
